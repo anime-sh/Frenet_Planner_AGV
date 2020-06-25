@@ -2,7 +2,7 @@ plugins:
   - {name : static_map, type : "costmap_2d::StaticLayer"}
   - {name : obstacles, type : "costmap_2d::VoxelLayer"}
 
-global_frame : "/map"
+global_frame : "map"
 robot_base_frame : "base_link"
 
 transform_tolerance : 200

@@ -94,4 +94,4 @@ inflation_layer:
 
 static_layer:
   enabled:              false
-  map_topic:            "/map"
+  map_topic:            "map"
