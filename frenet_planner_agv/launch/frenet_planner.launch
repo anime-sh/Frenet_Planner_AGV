@@ -8,18 +8,18 @@
 		<rosparam file = "$(find frenet_planner)/cfg/frenet_planner.yaml" command = "load" />
 	</node>
 
-	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+	<!-- <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
     <remap from="odom" to="base_pose_ground_truth" />
     <remap from="cmd_vel" to="cmd_vel_with_linear" />
     <param name="use_sim_time" value="true" />
     <param name="base_global_planner" value="$(arg base_global_planner)" />
-    <!-- <param name="base_local_planner" value="$(arg base_local_planner)" /> -->
-    <!-- <rosparam file="$(find car_demo)/cfg/teb_local_planner_params.yaml" command="load"/> -->
+    <param name="base_local_planner" value="$(arg base_local_planner)" />   comment these later
+    <rosparam file="$(find car_demo)/cfg/teb_local_planner_params.yaml" command="load"/>   comment these later
     <rosparam file="$(find frenet_planner)/cfg/costmap_common.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find frenet_planner)/cfg/costmap_common.yaml" command="load" ns="local_costmap" />
     <rosparam file="$(find frenet_planner)/cfg/costmap_local.yaml" command="load" />
     <rosparam file="$(find frenet_planner)/cfg/costmap_global.yaml" command="load" />
-  </node>
+  </node> -->
 
   <!-- Run the tracker node -->
   <!-- <node pkg= "tracking_control" name="tracker" type="pure_pursuit.py" output="screen"/> -->

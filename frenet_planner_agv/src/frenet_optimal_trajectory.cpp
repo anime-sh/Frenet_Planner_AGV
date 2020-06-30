@@ -246,6 +246,18 @@ double dist(double x1, double y1, double x2, double y2)
 
 bool point_obcheck(geometry_msgs::Point32 p, double obst_r)
 {
+	// cout<<"in point_obcheck\n";
+	// cout<<"printing obstacles\n";
+	// cout<<"[ ";
+	// cout<<ob_x.size();
+	// vector<pair<double,double>> obsdebug(ob_x.size());
+	// for(int i=0;i<ob_x.size();i++)
+	// {
+	// 	obsdebug[i].first=ob_x[i];
+	// 	obsdebug[i].second=ob_y[i];
+	// 	cout<<"("<<obsdebug[i].first<<", "<<obsdebug[i].second<<"), "<<endl;
+	// }
+	// cout<<" ]"<<endl;
 	int xlower, ylower, xupper, yupper;
 	auto it = lower_bound(ob_x.begin(), ob_x.end(), p.x);
 	if (ob_x.size() == 0)

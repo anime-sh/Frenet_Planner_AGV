@@ -64,17 +64,17 @@ void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 	ob_x.clear();
 	ob_y.clear();
 	geometry_msgs::Pose origin = occupancy_grid->info.origin;
-	
 	for (int width=0; width < occupancy_grid->info.width; ++width)
     {
         for (int height=0; height < occupancy_grid->info.height; ++height)
         {
-    
+			// cout<<"Jai Hind doston"<<endl;
 	        if(occupancy_grid->data[height*occupancy_grid->info.width + width] > 0)
             {
     
 	           ob_x.push_back(width * occupancy_grid->info.resolution + occupancy_grid->info.resolution / 2 + origin.position.x);
                ob_y.push_back(height * occupancy_grid->info.resolution + occupancy_grid->info.resolution / 2 + origin.position.y);
+				// cout<<ob_x.back()<<" "<<ob_y.back()<<endl;
             }
         }    
 	}

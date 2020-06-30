@@ -9,6 +9,7 @@ Panels:
         - /Path1
         - /Path1/Status1
         - /Path2
+        - /Map1
       Splitter Ratio: 0.5
     Tree Height: 281
   - Class: rviz/Selection
@@ -29,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Front Left Laser
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -212,6 +213,10 @@ Visualization Manager:
           Value: true
         chassis:
           Value: true
+        fl_axle:
+          Value: true
+        fr_axle:
+          Value: true
         front_camera_link:
           Value: true
         front_camera_link_optical:
@@ -222,21 +227,33 @@ Visualization Manager:
           Value: true
         front_left_middle_sonar_link:
           Value: true
+        front_left_wheel:
+          Value: true
         front_right_far_sonar_link:
           Value: true
         front_right_laser_link:
           Value: true
         front_right_middle_sonar_link:
           Value: true
+        front_right_wheel:
+          Value: true
         left_camera_link:
           Value: true
         left_camera_link_optical:
           Value: true
+        map:
+          Value: true
         odom:
+          Value: true
+        rear_left_wheel:
+          Value: true
+        rear_right_wheel:
           Value: true
         right_camera_link:
           Value: true
         right_camera_link_optical:
+          Value: true
+        steering_wheel:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -244,6 +261,8 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
+        map:
+          {}
         odom:
           base_link:
             chassis:
@@ -260,6 +279,12 @@ Visualization Manager:
                 {}
               center_laser_link:
                 {}
+              fl_axle:
+                front_left_wheel:
+                  {}
+              fr_axle:
+                front_right_wheel:
+                  {}
               front_camera_link:
                 front_camera_link_optical:
                   {}
@@ -278,9 +303,15 @@ Visualization Manager:
               left_camera_link:
                 left_camera_link_optical:
                   {}
+              rear_left_wheel:
+                {}
+              rear_right_wheel:
+                {}
               right_camera_link:
                 right_camera_link_optical:
                   {}
+              steering_wheel:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -474,8 +505,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 1.454081654548645
-        Min Value: -0.1605088710784912
+        Max Value: 1.4537625312805176
+        Min Value: -0.15845239162445068
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -557,6 +588,16 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /move_base/global_costmap/costmap
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -600,10 +641,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2003984451293945
+      Pitch: 0.4297962188720703
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.18039704859256744
+      Yaw: 1.7953968048095703
     Saved: ~
 Window Geometry:
   Displays:

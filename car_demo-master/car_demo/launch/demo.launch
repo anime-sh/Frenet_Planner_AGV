@@ -11,6 +11,7 @@
   </include>
 
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <param name="use_sim_time" value="true" />
     <rosparam file="$(find car_demo)/cfg/costmap_common_params.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find car_demo)/cfg/costmap_common_params.yaml" command="load" ns="local_costmap" />
     <rosparam file="$(find car_demo)/cfg/local_costmap_params.yaml" command="load" />
