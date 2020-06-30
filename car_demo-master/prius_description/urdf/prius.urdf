@@ -580,8 +580,8 @@
           <horizontal>
             <samples>640</samples>
             <resolution>1</resolution>
-            <min_angle>-2.26889</min_angle>
-            <max_angle>2.2689</max_angle>
+            <min_angle>-2.2689</min_angle>
+            <max_angle>0</max_angle>
           </horizontal>
           <vertical>
             <samples>1</samples>
@@ -612,7 +612,7 @@
           <horizontal>
             <samples>640</samples>
             <resolution>1</resolution>
-            <min_angle>-2.26889</min_angle>
+            <min_angle>0</min_angle>
             <max_angle>2.2689</max_angle>
           </horizontal>
           <vertical>
