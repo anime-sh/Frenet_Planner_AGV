@@ -1,5 +1,6 @@
 #include "../include/frenet_optimal_trajectory.hpp"
 #include <ros/console.h>
+#include <bits/stdc++.h> 
 namespace plt = matplotlibcpp;
 
 
@@ -312,16 +313,39 @@ bool FrenetPath::check_collision(double obst_r)
 	return 0;
 }
 
+bool sortByCost(FrenetPath a, FrenetPath b){
+
+	if(a.get_cf() != b.get_cf()){
+		return a.get_cf() < b.get_cf();
+	}else{
+		double jerkCost1,jerkCost2;
+		jerkCost1 = KLAT * a.get_Jp() + KLON * a.get_Js();
+		jerkCost2 = KLAT * b.get_Jp() + KLON * b.get_Js();
+		return jerkCost1 < jerkCost2;
+	}
+	
+}
+
 // check for specified velocity, acceleration, curvature constraints and collisions 
-vector<FrenetPath> check_path(vector<FrenetPath> fplist, double bot_yaw, double yaw_error, double obst_r)
+FrenetPath check_path(vector<FrenetPath> fplist, Spline2D csp, double bot_yaw, double yaw_error, double obst_r)
 {
 	vector<FrenetPath> fplist_final;
 	FrenetPath fp;
+	double leastCost;
+	bool first =true;
+	//int size=fplist.size();
+	sort(fplist.begin(),fplist.end(),sortByCost);
+	/*for(int i = 0; i < fplist.size(); i++)
+	{
+		fp = fplist[i];
+		cout<<fp.get_cf()<<endl;
+	}*/
 	for(int i = 0; i < fplist.size(); i++)
 	{
 		fp = fplist[i];
+		fp.adding_global_path(csp);	
 		int flag = 0;
-		vecD path_yaw = fplist[i].get_yaw();
+		vecD path_yaw = fp.get_yaw();
 
 		if (path_yaw.size()==0)
 			continue;
@@ -329,14 +353,13 @@ vector<FrenetPath> check_path(vector<FrenetPath> fplist, double bot_yaw, double 
 		{
 			flag=1;
 		}
-		
 		if(flag == 1){continue;}
 		else if(fp.check_collision(obst_r)==0)
 		{
-			fplist_final.push_back(fplist[i]);
+
+			return fp;
 		}			
 	}
-	return fplist_final;
 }
 
 void FrenetPath::plot_path()
@@ -369,18 +392,18 @@ void display_paths(vector<FrenetPath> fplist)
 FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, double c_d, double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
 {
 	vector<FrenetPath> fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0, lp);
-	fplist = calc_global_paths(fplist, csp);
-	fplist = check_path(fplist, bot_yaw, 0.523599, 2.0); // for now maximum possilble paths are taken into list
+	//fplist = calc_global_paths(fplist, csp);
+	FrenetPath bestpath = check_path(fplist,csp, bot_yaw, 0.523599, 2.0); // for now maximum possilble paths are taken into list
 	
-	// For displaying all paths
+	// For displaying all paths  Not possible now as we now consider bestpath only
 	if(false)
 	{
 		display_paths(fplist);
 	}
 
-	double min_cost = FLT_MAX;
-	double cf;
-	FrenetPath bestpath;
+	//double min_cost = FLT_MAX;
+	/*double cf;
+	
 	for(auto & fp : fplist)
 	{
 		cf = fp.get_cf();
@@ -389,10 +412,10 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 			min_cost = cf;
 			bestpath = fp;
 		}
-	}
+	}*/
 
 	// For showing the bestpath
-	if(false)
+	if(true)
 	{
 		plt::ion();
 		plt::show();
@@ -400,7 +423,7 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 	}
 
 	// For plotting velocity profile (x,y) = (t,s_d)
-	if(true)
+	if(false)
 	{
 		plt::ion();
 		plt::show();
