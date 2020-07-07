@@ -59,14 +59,15 @@ namespace plt = matplotlibcpp;
 //accesses the costmap and updates the obstacle coordinates
 void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 {
+	int height,width;
 
 	::cmap = *occupancy_grid;
 	ob_x.clear();
 	ob_y.clear();
 	geometry_msgs::Pose origin = occupancy_grid->info.origin;
-	for (int width=0; width < occupancy_grid->info.width; ++width)
+	for (width=0; width < occupancy_grid->info.width; ++width)
     {
-        for (int height=0; height < occupancy_grid->info.height; ++height)
+        for (height=0; height < occupancy_grid->info.height; ++height)
         {
 			// cout<<"Jai Hind doston"<<endl;
 	        if(occupancy_grid->data[height*occupancy_grid->info.width + width] > 0)
@@ -171,9 +172,11 @@ vecD global_path_yaw(Spline2D csp, vecD gx, vecD gy)
 {
 	vecD yaw;
 	vecD t = csp.calc_s(gx, gy);
+	yaw.resize(t.size());
 	for(int i = 0; i < t.size(); i++)
 	{
-		yaw.push_back(csp.calc_yaw(t[i]));
+		//yaw.push_back(csp.calc_yaw(t[i]));
+		yaw[i]=csp.calc_yaw(t[i]);
 	}
 	return yaw;
 }
@@ -283,16 +286,18 @@ void initial_conditions_new(Spline2D csp, vecD global_x, vecD global_y, vecD rya
 //publishes path as ros messages
 void publishPath(nav_msgs::Path &path_msg, FrenetPath path, vecD rk, vecD ryaw, double &c_speed, double &c_d, double &c_d_d)
 {
+	geometry_msgs::PoseStamped loc;
+	double delta_theta,yaw;
 	vecD x_vec = path.get_x();
 	vecD y_vec = path.get_y();
 	for(int i = 0; i < path.get_x().size(); i++)
 		{
-			geometry_msgs::PoseStamped loc;
+			
 			loc.pose.position.x = x_vec[i];
 			loc.pose.position.y = y_vec[i];
 
-			double delta_theta = atan(c_d_d / ((1 - rk[i]*c_d)*c_speed));
-			double yaw = delta_theta + ryaw[i];
+			delta_theta = atan(c_d_d / ((1 - rk[i]*c_d)*c_speed));
+			yaw = delta_theta + ryaw[i];
 
 			tf::Quaternion q = tf::createQuaternionFromRPY(0, 0, yaw); // roll , pitch = 0
 			q.normalize();
@@ -351,13 +356,13 @@ int main(int argc, char **argv)
 	vecD rx, ry, ryaw, rk;
 	
 	double ds = 0.1;	//ds represents the step size for cubic_spline
-	double bot_yaw;
+	double bot_yaw,bot_v ;
 	//Global path is made using the waypoints
 	Spline2D csp = calc_spline_course(W_X, W_Y, rx, ry, ryaw, rk, ds);
 	FrenetPath path;
 	FrenetPath lp;
 	double s0, c_d, c_d_d, c_d_dd, c_speed ;
-	int ctr=0;
+	int ctr=0,i;
 	clock_t start, end;
 	while(ros::ok())
 	{
@@ -389,7 +394,7 @@ int main(int argc, char **argv)
 		path_msg.poses.push_back(current_position);*/
 
 		//Global path pushed into the message
-		for(int i = 0; i < rx.size(); i++)
+		for(i = 0; i < rx.size(); i++)
 		{
 			geometry_msgs::PoseStamped loc;
 			loc.pose.position.x = rx[i];
@@ -411,7 +416,7 @@ int main(int argc, char **argv)
 		publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);	
 
 		//Next velocity along the path
-		double bot_v = sqrt(pow(1 - rk[1]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));	
+		bot_v = sqrt(pow(1 - rk[1]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));	
 
 		geometry_msgs::Twist vel;
 		vel.linear.x = bot_v;
