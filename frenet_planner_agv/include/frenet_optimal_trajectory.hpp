@@ -99,20 +99,49 @@ class FrenetPath
 		double get_Js();
 
 		void calc_lat_paths(double , double , double , double , double , double , double, double );
-		void calc_lon_paths(double , double , double , FrenetPath &, double);
-		void calc_lon_paths_quintic_poly(double , double , double , FrenetPath &, double , double  );
+		// void calc_lon_paths(double , double , double , FrenetPath &, double);
+		// void calc_lon_paths_quintic_poly(double , double , double , FrenetPath &, double , double  );
+		void calc_lon_paths(double , double , double , double);
+		void calc_lon_paths_quintic_poly(double , double , double , double , double  );
 		void adding_global_path(Spline2D );
 		bool check_collision(double);
 		void plot_path();
 		void plot_velocity_profile();
+		friend ostream& operator<< (ostream& os, const FrenetPath& fp);
 
 };
 void get_limits_d(FrenetPath , double* , double *);
-vector<FrenetPath> check_path(vector<FrenetPath>, double, double, double);
+vector<FrenetPath> check_path(vector<FrenetPath>&, double, double, double);
 vector<FrenetPath> calc_frenet_paths(double, double, double, double, double, FrenetPath );
 vector<FrenetPath> calc_global_paths(vector<FrenetPath> &, double);
 FrenetPath frenet_optimal_planning(Spline2D, double, double, double, double, double, FrenetPath, double);
 
+/*******for printing the frenet path***********/
+template<class T> ostream& operator<<(ostream &os, vector<T> V) { os << "[ "; for(auto v : V) os << v << " "; return os << "]"; }
+#define trace(...) __f(#__VA_ARGS__, __VA_ARGS__)
+template <typename Arg1>
+void __f(const char* name, Arg1&& arg1){cerr << name << " : " << arg1 << endl;}
+template <typename Arg1, typename... Args>
+void __f(const char* names, Arg1&& arg1, Args&&... args){ const char* comma = strchr(names + 1, ','); cerr.write(names, comma - names) << " : " << arg1<<" | "; __f(comma+1, args...); }
+
+ostream& operator<<(ostream& os, const FrenetPath& fp)
+{
+	trace(fp.t);
+	trace(fp.d);
+	trace(fp.d_d);
+	trace(fp.d_dd);
+	trace(fp.d_ddd);
+	trace(fp.s);
+	trace(fp.s_d);
+	trace(fp.s_dd);
+	trace(fp.s_ddd);
+	trace(fp.x);
+	trace(fp.y);
+	trace(fp.yaw);
+	trace(fp.ds);
+	return os;
+}
+/***********************end******************/
 inline vecD FrenetPath::get_t()
 {
 	return t;

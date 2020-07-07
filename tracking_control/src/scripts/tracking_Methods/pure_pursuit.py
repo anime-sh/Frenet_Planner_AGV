@@ -78,13 +78,13 @@ def callback_feedback(data):
 	yaw = math.atan2(siny, cosy) # yaw in radians
 
 	# printing the odometry readings
-	print ('x of car:', x_bot)
-	print ('y of car:', y_bot)
-	print ('angle of car:', yaw)
-	print ('vel of car:', data.twist.twist.linear.x,)
+	print 'x of car:', x_bot
+	print 'y of car:', y_bot
+	print 'angle of car:', yaw
+	print 'vel of car:', data.twist.twist.linear.x,
 	data.twist.twist.linear.y,
 	data.twist.twist.linear.z
-	print ('c')
+	print 'c'
 
 	cross_err = Twist()
 	calc_path_length(x_p)
@@ -114,14 +114,14 @@ def callback_feedback(data):
 	if (cross_prod > 0):
 		ep1 = -ep1
 
-	print ('ep_sum: ' , ep_sum)
-	print ('ep_avg: ' , ep_avg)
+	print 'ep_sum: ' , ep_sum
+	print 'ep_avg: ' , ep_avg
 	cross_err.linear.x = ep1
 	cross_err.angular.x = ep_max
 	cross_err.angular.y = ep_avg
 
 	   
-	print ('old index:', cp)
+	print 'old index:', cp
 	# calculate index of target point on path
 	cmd = Twist()
 	cmd1 = Twist()
@@ -136,14 +136,14 @@ def callback_feedback(data):
 			data1.poses[cp].pose.position.y
 		L += math.sqrt(dx ** 2 + dy ** 2)
 		cp = cp + 1
-	print (len(x_p.poses))
-	print ('new index is:', cp)
+	print len(x_p.poses)
+	print 'new index is:', cp
 
 	goal_point = [x_p.poses[cp].pose.position.x,
 				  x_p.poses[cp].pose.position.y]
-	print ('current goal is:', goal_point)
+	print 'current goal is:', goal_point
 	error = [goal_point[0] - x_bot, goal_point[1] - y_bot]
-	print (error)
+	print error
 	steer_angle = pure_pursuit(goal_point)
 
 	siny = +2.0 * (x_p.poses[cp].pose.orientation.w *
@@ -161,19 +161,19 @@ def callback_feedback(data):
 	cross_err.linear.y =  (-1)*(yaw - steer_path)
 
 
-	print ("steer_angle :", steer_angle * 180 / math.pi)
+	print "steer_angle :", steer_angle * 180 / math.pi
 	cmd.angular.z = min(30, max(-30, steer_angle * 180 / math.pi))
 	cmd.linear.y = math.sqrt(error[0]**2 + error[1]**2)
-	print ('omega:', cmd.angular.z)
+	print 'omega:', cmd.angular.z
 	cross_err.linear.z = path_length[cp]
 
 	pub1.publish(cmd)
 	pub2.publish(cross_err)
 	
-	print ("cmd published")
+	print "cmd published"
 
 	# print (ep)
-	print (x_p.poses[cp].pose.orientation)
+	print x_p.poses[cp].pose.orientation
 
 
 def dist(a, x, y):
@@ -224,16 +224,16 @@ def pure_pursuit(goal_point):
 	'''
 	tx = goal_point[0]
 	ty = goal_point[1]
-	print ('yaw:', yaw)
+	print 'yaw:', yaw
 	# measuring the slope of path point
-	print ('slope:', math.atan2(ty - y_bot, tx - x_bot))
+	print 'slope:', math.atan2(ty - y_bot, tx - x_bot)
 	# measuring heading angle 
 	alpha = math.atan2(ty - y_bot, tx - x_bot) - yaw
-	print ('alpha:', alpha)
+	print 'alpha:', alpha
 	Lf = k * max_vel + d_lookahead
 	# measuring the steering angle using pure pursuit controller
 	Delta = math.atan2(2.0 * wheelbase * math.sin(alpha) / Lf, 1)
-	print ('Delta:', Delta)
+	print 'Delta:', Delta
 	return Delta
 
 
