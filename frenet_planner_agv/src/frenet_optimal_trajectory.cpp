@@ -22,7 +22,7 @@ namespace plt = matplotlibcpp;
 // }
 
 //calculates lateral paths using the sampling parameters passed
-void FrenetPath::calc_lat_paths(double c_speed, double c_d, double c_d_d, double c_d_dd, double s0, double Ti, double di, double di_d)
+void FrenetPath::calc_lat_paths(double c_d, double c_d_d, double c_d_dd, double Ti, double di, double di_d)
 {
 	quintic lat_qp(c_d, c_d_d, c_d_dd, di, di_d, 0.0, Ti);
 	for(double te = 0.0; te <= Ti + DT; te += DT)
@@ -150,7 +150,7 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 			{
 				FrenetPath fp;
 				FrenetPath tfp;
-				fp.calc_lat_paths(c_speed, c_d, c_d_d, c_d_dd, s0, Ti, di, di_d);
+				fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di, di_d);
 				vecD d_ddd_vec = fp.get_d_ddd();
 				fp.set_Jp( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));  //
 				double minV = TARGET_SPEED - D_T_S*N_S_SAMPLE;
@@ -176,10 +176,10 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 
 void FrenetPath::adding_global_path(Spline2D csp)
 {
-	for(int i = 0; i < s.size(); i++)
+	for(unsigned int i = 0; i < s.size(); i++)
 	{
 		double ix, iy;
-		csp.calc_position(&ix, &iy, s[i]);
+		csp.calc_position(ix, iy, s[i]);
 
 		if(ix == NONE)
 		{
@@ -192,7 +192,7 @@ void FrenetPath::adding_global_path(Spline2D csp)
 		x.push_back(fx);
 		y.push_back(fy);
 	}
-	for(int i = 0; i < x.size() - 1; i++)
+	for(unsigned int i = 0; i < x.size() - 1; i++)
 	{
 		double dx = x[i + 1] - x[i];
 		double dy = y[i + 1] - y[i];
@@ -203,7 +203,7 @@ void FrenetPath::adding_global_path(Spline2D csp)
 	{
 		return;
 	}
-	for(int i = 0; i < yaw.size() - 1; i++){
+	for(unsigned int i = 0; i < yaw.size() - 1; i++){
 		c.push_back((yaw[i + 1] - yaw[i]) / ds[i]);
 	}
 }
@@ -237,7 +237,7 @@ vector<geometry_msgs::Point32> transformation(vector<geometry_msgs::Point32> fp,
 	x = px - bx;
 	y = py - by;
 	
-	for(int i = 0; i < new_fp.size(); i++)
+	for(unsigned int i = 0; i < new_fp.size(); i++)
 	{
 		new_fp[i].x = (fp[i].x - bx)* cos(theta) + (fp[i].y - by) * sin(theta) + x + bx;
 		new_fp[i].y = -(fp[i].x - bx) * sin(theta) + (fp[i].y - by) * cos(theta) + y + by;
@@ -299,10 +299,10 @@ bool FrenetPath::check_collision(double obst_r)
 {
 	if(s.size() != x.size())
 		return 1;
-	for(int i = 0; i < x.size(); i++)
+	for(unsigned int i = 0; i < x.size(); i++)
 	{
 		vector<geometry_msgs::Point32> trans_footprint = transformation(footprint.polygon.points, odom.pose.pose, x[i], y[i], yaw[i]);
-		for(int j = 0; j < trans_footprint.size(); j++)
+		for(unsigned int j = 0; j < trans_footprint.size(); j++)
 		{
 			if(point_obcheck(trans_footprint[j],obst_r) ==1 )
 			{
@@ -331,7 +331,7 @@ vector<FrenetPath> check_path(vector<FrenetPath>& fplist, double bot_yaw, double
 {
 	vector<FrenetPath> fplist_final;
 	FrenetPath fp;
-	for(int i = 0; i < fplist.size(); i++)
+	for(unsigned int i = 0; i < fplist.size(); i++)
 	{
 		fp = fplist[i];
 		int flag = 0;

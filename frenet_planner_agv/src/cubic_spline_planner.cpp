@@ -17,7 +17,7 @@ where h_i = x_i - x_i-1
 void printVecD(vecD A)
 {
 	cout << "\n------------Printing the vector----------\n";
-	for(int i = 0; i < A.size(); i++)
+	for(unsigned int i = 0; i < A.size(); i++)
 		cout << A[i] << "\n";
 	cout << "\n-----------------------------------------\n" << endl;
 }
@@ -100,12 +100,13 @@ double Spline::calc(double t) // find y at given x
 	{
 		return NONE;
 	}
+	cout<<"1";
 	int i = search_index(t);
-
+	cout<<"2";
 	double dx = t - x[i]; 
-
+	cout<<"3";
 	double result = a[i] + b[i]*dx + c[i]*dx*dx + d[i]*dx*dx*dx;
-
+	cout<<"4";
 	return result;
 }
 
@@ -153,16 +154,16 @@ y = g(s)
 vecD Spline2D::calc_s(vecD x, vecD y) // approximately calculates s along the spline 
 {
 	vecD dx;
-	for(int i = 1; i < x.size(); i++)
+	for(unsigned int i = 1; i < x.size(); i++)
 		dx.push_back(x[i] - x[i - 1]);
 
 
 	vecD dy;
-	for(int i = 1; i < x.size(); i++)
+	for(unsigned int i = 1; i < x.size(); i++)
 		dy.push_back(y[i] - y[i - 1]);
 
 	ds.clear(); 
-	for(int i = 0; i < dx.size(); i++)
+	for(unsigned int i = 0; i < dx.size(); i++)
 	{
 		double temp;
 		temp = sqrt(dx[i]*dx[i] + dy[i]*dy[i]);
@@ -172,7 +173,7 @@ vecD Spline2D::calc_s(vecD x, vecD y) // approximately calculates s along the sp
 	vecD t;
 	t.push_back(0);
 
-	for(int i = 0; i < ds.size(); i++)
+	for(unsigned int i = 0; i < ds.size(); i++)
 	{
 		t.push_back(t.back() + ds[i]);
 	}
@@ -181,10 +182,10 @@ vecD Spline2D::calc_s(vecD x, vecD y) // approximately calculates s along the sp
 }
 
 
-void Spline2D::calc_position(double *x, double *y, double t) // 
+void Spline2D::calc_position(double &x, double &y, double t) // 
 {
-	*x = sx.calc(t);
-	*y = sy.calc(t);
+	x = sx.calc(t);
+	y = sy.calc(t);
 }
 
 
@@ -243,16 +244,24 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
 		sInc = sInc + ds;
 	}	
 	//printVecD(s);
-	for(int i = 0; i < s.size(); i++)
+	rx.resize(s.size());
+	ry.resize(s.size());
+	ryaw.resize(s.size());
+	rk.resize(s.size());
+	for(unsigned int i = 0; i < s.size(); i++)
 	{
 		double ix, iy;
-		sp.calc_position(&ix, &iy, s[i]);
-		rx.push_back(ix);
-		ry.push_back(iy);
-
-		ryaw.push_back(sp.calc_yaw(s[i]));
-		rk.push_back(sp.calc_curvature(s[i]));
+		sp.calc_position(ix, iy, s[i]);
+		cout<<"l1";
+		rx[i]=ix;
+		cout<<"l2";
+		ry[i]=iy;
+		cout<<"l3";
+		ryaw[i]=sp.calc_yaw(s[i]);
+		cout<<"l4";
+		rk[i]=sp.calc_curvature(s[i]);
+		cout<<"l5";
 	}
-
+	cout<<"lol";
 	return sp;
 }

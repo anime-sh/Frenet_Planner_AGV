@@ -54,7 +54,7 @@ class Spline2D
 
 
 		vecD calc_s(vecD x, vecD y);
-		void calc_position(double *x, double *y, double t);
+		void calc_position(double &x, double &y, double t);
 		double calc_curvature(double t);
 		double calc_yaw(double t);
 		double get_s_last();

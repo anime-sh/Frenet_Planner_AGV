@@ -3,7 +3,9 @@ project(frenet_planner)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_FLAGS "-Wall -Wshadow -Wextra -Wpedantic -fsanitize=address -fsanitize=undefined")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages

@@ -59,7 +59,7 @@ namespace plt = matplotlibcpp;
 //accesses the costmap and updates the obstacle coordinates
 void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 {
-	int height,width;
+	unsigned int height,width;
 
 	::cmap = *occupancy_grid;
 	ob_x.clear();
@@ -73,13 +73,12 @@ void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 	        if(occupancy_grid->data[height*occupancy_grid->info.width + width] > 0)
             {
     
-	           ob_x.push_back(width * occupancy_grid->info.resolution + occupancy_grid->info.resolution / 2 + origin.position.x);
-               ob_y.push_back(height * occupancy_grid->info.resolution + occupancy_grid->info.resolution / 2 + origin.position.y);
+	           ob_x.emplace_back(width * occupancy_grid->info.resolution + occupancy_grid->info.resolution / 2 + origin.position.x);
+               ob_y.emplace_back(height * occupancy_grid->info.resolution + occupancy_grid->info.resolution / 2 + origin.position.y);
 				// cout<<ob_x.back()<<" "<<ob_y.back()<<endl;
             }
         }    
 	}
-
 }
 //accesses the robot footprint
 void footprint_callback(const geometry_msgs::PolygonStampedConstPtr& p)
@@ -104,7 +103,7 @@ inline double calc_dis(double x1, double y1, double x2, double y2)
 }
 
 //finds the point in the global path which is nearest to the bot 
-void find_nearest_in_global_path(vecD global_x, vecD global_y, double &min_x, double &min_y, double &min_dis, int &min_id, int flag, FrenetPath path)
+void find_nearest_in_global_path(vecD &global_x, vecD &global_y, double &min_x, double &min_y, double &min_dis, int &min_id, int flag, FrenetPath &path)
 {
 	double bot_x, bot_y;
 	if(flag==0)
@@ -118,7 +117,7 @@ void find_nearest_in_global_path(vecD global_x, vecD global_y, double &min_x, do
 		bot_y = path.get_y()[1];
 	} 
 	min_dis = FLT_MAX;
-	for(int i = 0; i < global_x.size(); i++)
+	for(unsigned int i = 0; i < global_x.size(); i++)
 	{
 		double dis = calc_dis(global_x[i], global_y[i], bot_x, bot_y);
 		if(dis < min_dis)
@@ -132,14 +131,14 @@ void find_nearest_in_global_path(vecD global_x, vecD global_y, double &min_x, do
 }
 
 //calculates s 
-double calc_s(double ptx, double pty, vecD global_x, vecD global_y)
+double calc_s(double ptx, double pty, vecD &global_x, vecD &global_y)
 {
 	double s = 0;
 	if(global_x[0] == ptx && global_y[0] == pty)
 	{	
 		return s;
 	}
-	for(int i = 1; i < global_x.size(); i++)
+	for(unsigned int i = 1; i < global_x.size(); i++)
 	{
 		double dis = calc_dis(global_x[i], global_y[i], global_x[i - 1], global_y[i - 1]);
 		s = s + dis;
@@ -168,12 +167,12 @@ inline double get_bot_yaw()
 }
 
 
-vecD global_path_yaw(Spline2D csp, vecD gx, vecD gy)
+vecD global_path_yaw(Spline2D &csp, vecD &gx, vecD &gy)
 {
 	vecD yaw;
 	vecD t = csp.calc_s(gx, gy);
 	yaw.resize(t.size());
-	for(int i = 0; i < t.size(); i++)
+	for(unsigned int i = 0; i < t.size(); i++)
 	{
 		//yaw.push_back(csp.calc_yaw(t[i]));
 		yaw[i]=csp.calc_yaw(t[i]);
@@ -181,7 +180,7 @@ vecD global_path_yaw(Spline2D csp, vecD gx, vecD gy)
 	return yaw;
 }
 
-void initial_conditions_path(Spline2D csp, vecD global_x, vecD global_y, vecD ryaw, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath path)
+void initial_conditions_path(double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
 	// Approach 1
 	vecD d = path.get_d();
@@ -239,9 +238,9 @@ void initial_conditions_path(Spline2D csp, vecD global_x, vecD global_y, vecD ry
 	*/
 }
 
-void initial_conditions_new(Spline2D csp, vecD global_x, vecD global_y, vecD ryaw, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double bot_yaw)
+void initial_conditions_new(Spline2D &csp, vecD &global_x, vecD &global_y, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
-	FrenetPath path;
+	//FrenetPath path;
 	double vx = odom.twist.twist.linear.x;
 	double vy = odom.twist.twist.linear.y;
 	double v = sqrt(vx*vx + vy*vy);
@@ -284,13 +283,13 @@ void initial_conditions_new(Spline2D csp, vecD global_x, vecD global_y, vecD rya
 }
 
 //publishes path as ros messages
-void publishPath(nav_msgs::Path &path_msg, FrenetPath path, vecD rk, vecD ryaw, double &c_speed, double &c_d, double &c_d_d)
+void publishPath(nav_msgs::Path &path_msg, FrenetPath &path, vecD &rk, vecD &ryaw, double &c_speed, double &c_d, double &c_d_d)
 {
 	geometry_msgs::PoseStamped loc;
 	double delta_theta,yaw;
 	vecD x_vec = path.get_x();
 	vecD y_vec = path.get_y();
-	for(int i = 0; i < path.get_x().size(); i++)
+	for(unsigned int i = 0; i < path.get_x().size(); i++)
 		{
 			
 			loc.pose.position.x = x_vec[i];
@@ -359,21 +358,21 @@ int main(int argc, char **argv)
 	double bot_yaw,bot_v ;
 	//Global path is made using the waypoints
 	Spline2D csp = calc_spline_course(W_X, W_Y, rx, ry, ryaw, rk, ds);
+	cout<<"hii";
 	FrenetPath path;
 	FrenetPath lp;
 	double s0, c_d, c_d_d, c_d_dd, c_speed ;
-	int ctr=0,i;
-	clock_t start, end;
+	unsigned int ctr=0,i;
 	while(ros::ok())
 	{
 		//Specifing initial conditions for the frenet planner using odometry
 		if(ctr%10 == 0 or path.get_c().size() == 0)	
 		{
-			initial_conditions_new(csp, rx, ry, ryaw, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw);
+			initial_conditions_new(csp, rx , ry, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
 		}
 		else
 		{
-			initial_conditions_path(csp, rx, ry, ryaw, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
+			initial_conditions_path(s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
 		}		
 
 		//Getting the optimal frenet path

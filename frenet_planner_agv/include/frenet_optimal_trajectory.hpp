@@ -98,7 +98,7 @@ class FrenetPath
 		double get_Jp();
 		double get_Js();
 
-		void calc_lat_paths(double , double , double , double , double , double , double, double );
+		void calc_lat_paths(double , double , double , double , double, double );
 		// void calc_lon_paths(double , double , double , FrenetPath &, double);
 		// void calc_lon_paths_quintic_poly(double , double , double , FrenetPath &, double , double  );
 		void calc_lon_paths(double , double , double , double);
@@ -202,13 +202,13 @@ inline double FrenetPath::get_cf()
 {
 	return cf;
 }
-inline void FrenetPath::set_Jp(double x)
+inline void FrenetPath::set_Jp(double jp)
 {
-	Jp=x;
+	Jp=jp;
 }
-inline void FrenetPath::set_Js(double x)
+inline void FrenetPath::set_Js(double js)
 {
-	Js=x;
+	Js=js;
 }
 inline double FrenetPath::get_Jp()
 {
