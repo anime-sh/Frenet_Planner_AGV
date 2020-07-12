@@ -1,5 +1,11 @@
 #include "../include/cubic_spline_planner.hpp"
-
+template<class T> ostream& operator<<(ostream &os, vector<T> V) { os << "[ "; for(auto v : V) os << v << " "; return os << "]"; }
+// #define trace(...) __f(#__VA_ARGS__, __VA_ARGS__)
+//     template <typename Arg1>
+//     void __f(const char* name, Arg1&& arg1){cerr << name << " : " << arg1 << endl;}
+//     template <typename Arg1, typename... Args>
+//     void __f(const char* names, Arg1&& arg1, Args&&... args){ const char* comma = strchr(names + 1, ','); cerr.write(names, comma - names) << " : " << arg1<<" | "; __f(comma+1, args...); }
+#define trace(...) 42
 // Python NONE equivalents :
 // single variable -1e9
 // Splines: http://www.cs.cornell.edu/courses/cs4620/2013fa/lectures/16spline-curves.pdf
@@ -56,7 +62,22 @@ MatrixXd Spline::calc_B(vecD h) // get matrix B
 
 int Spline::search_index(double p) // returns the index of the just greater element
 {
-	return upper_bound(x.begin(), x.end(), p) - x.begin() - 1;      /**/// yeh sahi hai ?
+	// return upper_bound(x.begin(), x.end(), p) - x.begin() - 1;      /**/// yeh sahi hai ?
+	// return upper_bound(x.begin(), x.end(), p) - x.begin();
+	trace(x);
+	trace(p);
+	auto it  = upper_bound(x.begin(), x.end(), p);
+	if(it==x.end())
+	{
+		trace("wow");
+		return x.size()-1;
+	}
+	else
+	{
+		trace("lalala");
+		return it-x.begin();
+	}
+	
 }
 
 
@@ -80,8 +101,9 @@ void Spline::init(vecD x_in, vecD y_in) // calculates the coeffs for splines
 
 	for(int i = 0; i < C.rows(); ++i)
 		c.push_back(C(i, 0));
-
-	for(int i = 0; i < nx - 1; i++)
+	b.emplace_back(0);
+	d.emplace_back(0);
+	for(int i = 0; i < nx -1; i++)
 	{
 		d.push_back((c[i + 1] - c[i]) / (3.0*h[i]));
 		double tb = (a[i + 1] - a[i]) / h[i] - h[i]*(c[i + 1] + 2.0*c[i]) / 3.0;
@@ -92,21 +114,38 @@ void Spline::init(vecD x_in, vecD y_in) // calculates the coeffs for splines
 
 double Spline::calc(double t) // find y at given x
 {
+	if(x.size()==0)
+	{
+		trace("103");
+		return NONE;
+	}
 	if(t < x[0])
 	{
+		trace("108");
 		return NONE;
 	}
 	else if(t > x[nx - 1])
 	{
+		trace("113");
 		return NONE;
 	}
-	cout<<"1";
+	// cout<<"1";
 	int i = search_index(t);
-	cout<<"2";
+	// cout<<"2";
+	trace(i);
+	trace(x.size());
 	double dx = t - x[i]; 
-	cout<<"3";
+	// cout<<"3";
+	if(i>nx-1)
+	{
+		trace("123");
+		return NONE;
+	}
+	trace("hi");
+	trace(a,b,c,d);
 	double result = a[i] + b[i]*dx + c[i]*dx*dx + d[i]*dx*dx*dx;
-	cout<<"4";
+	trace("bye");
+	// cout<<"4";
 	return result;
 }
 
@@ -184,7 +223,9 @@ vecD Spline2D::calc_s(vecD x, vecD y) // approximately calculates s along the sp
 
 void Spline2D::calc_position(double &x, double &y, double t) // 
 {
+	trace("doing x");
 	x = sx.calc(t);
+	trace("doing y");
 	y = sy.calc(t);
 }
 
@@ -229,6 +270,7 @@ double Spline2D::get_s_last()
 // generates the Spline2D with points along the spline at distance = ds, also returns yaw and curvature 
 Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD &rk, double ds)
 {
+
 	Spline2D sp(x, y);
 
 	vecD s;
@@ -248,20 +290,24 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
 	ry.resize(s.size());
 	ryaw.resize(s.size());
 	rk.resize(s.size());
-	for(unsigned int i = 0; i < s.size(); i++)
+	
+	for(int i = 0; i < s.size(); i++)
 	{
+		// int i=0;/
 		double ix, iy;
+		// trace("rk and ry");
 		sp.calc_position(ix, iy, s[i]);
-		cout<<"l1";
 		rx[i]=ix;
-		cout<<"l2";
 		ry[i]=iy;
-		cout<<"l3";
+		// trace("ryaw");
 		ryaw[i]=sp.calc_yaw(s[i]);
-		cout<<"l4";
+		// trace(ryaw);
+		// trace("rk");
 		rk[i]=sp.calc_curvature(s[i]);
-		cout<<"l5";
+		// trace(rk);
+		// trace(s.size(),i);
+		// trace("by");
 	}
-	cout<<"lol";
+	trace("lol");
 	return sp;
 }

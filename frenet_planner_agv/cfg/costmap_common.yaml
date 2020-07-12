@@ -81,11 +81,11 @@ obstacle_layer:
  track_unknown_space: true
  combination_method: 1      
 
- observation_sources: laser_scan_sensor
+ observation_sources: laser_right laser_left 
  laser_scan_sensor: {sensor_frame: main_laser_link, data_type: LaserScan, topic: /prius/main_laser/scan, marking: true, clearing: true}
  laser_right: {sensor_frame: front_right_laser_link, data_type: LaserScan, clearing: true, marking: true, topic: /prius/front_right_laser/scan, inf_is_valid: true}
- laser_left: {sensor_frame: front_left_laser_link, data_type: LaserScan, clearin  g: true, marking: true, topic: /prius/front_left_laser/scan, inf_is_valid: true}
- laser_centre: {sensor_frame: center_laser_link, data_type: PointClou d, clearing: true, marking: true, topic: /prius/center_laser/scan, inf_is_valid: true}
+ laser_left: {sensor_frame: front_left_laser_link, data_type: LaserScan, clearing: true, marking: true, topic: /prius/front_left_laser/scan, inf_is_valid: true}
+ laser_centre: {sensor_frame: center_laser_link, data_type: PointCloud, clearing: true, marking: true, topic: /prius/center_laser/scan, inf_is_valid: true}
 
 inflation_layer:
   enabled:              true

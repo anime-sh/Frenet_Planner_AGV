@@ -92,7 +92,7 @@ void footprint_callback(const geometry_msgs::PolygonStampedConstPtr& p)
 void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
 	odom = *msg;
-
+	 ROS_INFO("Odom Received");
 }
 
 
@@ -156,13 +156,13 @@ double calc_s(double ptx, double pty, vecD &global_x, vecD &global_y)
 inline double get_bot_yaw()
 {
 	geometry_msgs::Pose p = odom.pose.pose;
-
+	trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
 	tf::Quaternion q(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
 	tf::Matrix3x3 m(q);
 
 	double roll, pitch, yaw;
 	m.getRPY(roll, pitch, yaw);
-
+	trace(yaw,pitch,roll); //is -nan
 	return yaw;
 }
 
@@ -267,12 +267,14 @@ void initial_conditions_new(Spline2D &csp, vecD &global_x, vecD &global_y, doubl
 
 	bot_yaw = get_bot_yaw();
 	
-	
 	vecD theta = global_path_yaw(csp, global_x, global_y);
+	trace(theta);
 	double g_path_yaw = theta[min_id];	
 
+	trace(bot_yaw,g_path_yaw);
 	double delta_theta = bot_yaw - g_path_yaw;
 
+	trace(delta_theta);
 	c_d_d = v*sin(delta_theta);//Equation 5
 
 	double k_r = csp.calc_curvature(s0);
@@ -357,14 +359,16 @@ int main(int argc, char **argv)
 	double ds = 0.1;	//ds represents the step size for cubic_spline
 	double bot_yaw,bot_v ;
 	//Global path is made using the waypoints
+	trace("csp go");
 	Spline2D csp = calc_spline_course(W_X, W_Y, rx, ry, ryaw, rk, ds);
-	cout<<"hii";
+	trace("csp done");
 	FrenetPath path;
 	FrenetPath lp;
 	double s0, c_d, c_d_d, c_d_dd, c_speed ;
 	unsigned int ctr=0,i;
 	while(ros::ok())
 	{
+		trace("intial conditions start");
 		//Specifing initial conditions for the frenet planner using odometry
 		if(ctr%10 == 0 or path.get_c().size() == 0)	
 		{
@@ -374,11 +378,11 @@ int main(int argc, char **argv)
 		{
 			initial_conditions_path(s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
 		}		
-
+		trace("frenet optimal planning",s0,c_d_d);
 		//Getting the optimal frenet path
 		path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		lp = path;
-
+		trace("done");
 		nav_msgs::Path path_msg;
 		nav_msgs::Path global_path_msg;
 

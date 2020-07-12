@@ -24,6 +24,7 @@ namespace plt = matplotlibcpp;
 //calculates lateral paths using the sampling parameters passed
 void FrenetPath::calc_lat_paths(double c_d, double c_d_d, double c_d_dd, double Ti, double di, double di_d)
 {
+	// trace(c_d,c_d_d,c_d_dd,Ti,di,di_d);
 	quintic lat_qp(c_d, c_d_d, c_d_dd, di, di_d, 0.0, Ti);
 	for(double te = 0.0; te <= Ti + DT; te += DT)
 	{
@@ -137,6 +138,7 @@ void get_limits_d(FrenetPath lp, double *lower_limit_d, double *upper_limit_d)
 // generates frenet path parameters
 vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, double c_d_dd, double s0, FrenetPath lp)
 {
+	// trace(c_d_d);
 	vector<FrenetPath> frenet_paths;
 	double lower_limit_d, upper_limit_d;
 	lower_limit_d = -MAX_ROAD_WIDTH;
@@ -179,8 +181,9 @@ void FrenetPath::adding_global_path(Spline2D csp)
 	for(unsigned int i = 0; i < s.size(); i++)
 	{
 		double ix, iy;
+		// trace(i);
 		csp.calc_position(ix, iy, s[i]);
-
+		// trace("done calc_position");
 		if(ix == NONE)
 		{
 			break;
@@ -213,6 +216,8 @@ vector<FrenetPath> calc_global_paths(vector<FrenetPath> fplist, Spline2D csp)
 {
 	for(auto& fp : fplist)
 	{
+		// cerr<<fp<<endl;
+		// trace("adding global path");
 		fp.adding_global_path(csp);	
 	}
 	return fplist;
@@ -297,19 +302,28 @@ bool point_obcheck(geometry_msgs::Point32 p, double obst_r)
 //checks for collision of the bot
 bool FrenetPath::check_collision(double obst_r)
 {
+	// trace("in");
 	if(s.size() != x.size())
-		return 1;
-	for(unsigned int i = 0; i < x.size(); i++)
 	{
+		// trace("307");
+		return 1;
+	}
+	for(unsigned int i = 0; i < min(x.size(),yaw.size()); i++)
+	{
+		// trace("poss");
 		vector<geometry_msgs::Point32> trans_footprint = transformation(footprint.polygon.points, odom.pose.pose, x[i], y[i], yaw[i]);
+		// trace("tno");
 		for(unsigned int j = 0; j < trans_footprint.size(); j++)
 		{
+			// trace(i,j);
 			if(point_obcheck(trans_footprint[j],obst_r) ==1 )
 			{
+				// trace("out1");
 				return 1;
 			}
 		}
 	}
+	// trace("out2");
 	return 0;
 }
 
@@ -333,12 +347,13 @@ vector<FrenetPath> check_path(vector<FrenetPath>& fplist, double bot_yaw, double
 	FrenetPath fp;
 	for(unsigned int i = 0; i < fplist.size(); i++)
 	{
+		trace(i);
 		fp = fplist[i];
 		int flag = 0;
 		vecD path_yaw = fplist[i].get_yaw();
-
 		if (path_yaw.size()==0)
 			continue;
+		trace(path_yaw);
 		if ((path_yaw[0] - bot_yaw)> yaw_error || (path_yaw[0] - bot_yaw)< -yaw_error) //20 deg
 		{
 			flag=1;
@@ -381,12 +396,15 @@ void display_paths(vector<FrenetPath> fplist)
 }
 
 // generates the path and returns the bestpath
-FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, double c_d, double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
+FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, double c_d, double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw, int ctr)
 {
+	trace("start");
 	vector<FrenetPath> fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0, lp);
+	trace("calc_global_paths");
 	fplist = calc_global_paths(fplist, csp);
+	trace("check_path");
 	fplist = check_path(fplist, bot_yaw, 0.523599, 2.0); // for now maximum possilble paths are taken into list
-	
+	trace("done checking ");
 	// For displaying all paths
 	if(false)
 	{
@@ -405,7 +423,6 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 			bestpath = fp;
 		}
 	}
-
 	// For showing the bestpath
 	if(false)
 	{
@@ -413,14 +430,17 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 		plt::show();
 		bestpath.plot_path();
 	}
-
 	// For plotting velocity profile (x,y) = (t,s_d)
-	if(true)
+	if(false)
 	{
+		// trace("436");
 		plt::ion();
+		// trace("438");
 		plt::show();
+		// trace("440");
 		bestpath.plot_velocity_profile();
+		// trace("442");
 	}
-
+	trace("DONE");
 	return bestpath;
 }
