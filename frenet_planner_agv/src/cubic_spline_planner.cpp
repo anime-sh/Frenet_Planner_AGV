@@ -70,12 +70,12 @@ int Spline::search_index(double p) // returns the index of the just greater elem
 	if(it==x.end())
 	{
 		trace("wow");
-		return x.size()-1;
+		return x.size()-2;
 	}
 	else
 	{
 		trace("lalala");
-		return it-x.begin();
+		return it-x.begin()-1;
 	}
 	
 }
@@ -101,8 +101,8 @@ void Spline::init(vecD x_in, vecD y_in) // calculates the coeffs for splines
 
 	for(int i = 0; i < C.rows(); ++i)
 		c.push_back(C(i, 0));
-	b.emplace_back(0);
-	d.emplace_back(0);
+	// b.emplace_back(0);
+	// d.emplace_back(0);
 	for(int i = 0; i < nx -1; i++)
 	{
 		d.push_back((c[i + 1] - c[i]) / (3.0*h[i]));
@@ -143,6 +143,8 @@ double Spline::calc(double t) // find y at given x
 	}
 	trace("hi");
 	trace(a,b,c,d);
+	trace(i,b.size(),a.size());
+	// assert(i<b.size());
 	double result = a[i] + b[i]*dx + c[i]*dx*dx + d[i]*dx*dx*dx;
 	trace("bye");
 	// cout<<"4";

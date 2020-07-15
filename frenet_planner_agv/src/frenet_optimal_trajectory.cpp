@@ -347,13 +347,13 @@ vector<FrenetPath> check_path(vector<FrenetPath>& fplist, double bot_yaw, double
 	FrenetPath fp;
 	for(unsigned int i = 0; i < fplist.size(); i++)
 	{
-		trace(i);
+		// trace(i);
 		fp = fplist[i];
 		int flag = 0;
 		vecD path_yaw = fplist[i].get_yaw();
 		if (path_yaw.size()==0)
 			continue;
-		trace(path_yaw);
+		// trace(path_yaw);
 		if ((path_yaw[0] - bot_yaw)> yaw_error || (path_yaw[0] - bot_yaw)< -yaw_error) //20 deg
 		{
 			flag=1;
@@ -396,7 +396,7 @@ void display_paths(vector<FrenetPath> fplist)
 }
 
 // generates the path and returns the bestpath
-FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, double c_d, double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw, int ctr)
+FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, double c_d, double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
 {
 	trace("start");
 	vector<FrenetPath> fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0, lp);

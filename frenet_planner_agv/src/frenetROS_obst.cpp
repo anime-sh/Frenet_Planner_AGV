@@ -91,7 +91,9 @@ void footprint_callback(const geometry_msgs::PolygonStampedConstPtr& p)
 //accesses the odometry data
 void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-	odom = *msg;
+	::odom = *msg;
+	geometry_msgs::Pose p = odom.pose.pose;
+	trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
 	 ROS_INFO("Odom Received");
 }
 
@@ -156,7 +158,7 @@ double calc_s(double ptx, double pty, vecD &global_x, vecD &global_y)
 inline double get_bot_yaw()
 {
 	geometry_msgs::Pose p = odom.pose.pose;
-	trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
+	// trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
 	tf::Quaternion q(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
 	tf::Matrix3x3 m(q);
 
@@ -268,7 +270,7 @@ void initial_conditions_new(Spline2D &csp, vecD &global_x, vecD &global_y, doubl
 	bot_yaw = get_bot_yaw();
 	
 	vecD theta = global_path_yaw(csp, global_x, global_y);
-	trace(theta);
+	// trace(theta);
 	double g_path_yaw = theta[min_id];	
 
 	trace(bot_yaw,g_path_yaw);
@@ -404,7 +406,7 @@ int main(int argc, char **argv)
 			loc.pose.position.y = ry[i];
 			global_path_msg.poses.push_back(loc);
 		}
-
+		trace("407");
 		if(false)
 		{
 			plt::ion();
