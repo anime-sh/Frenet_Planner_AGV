@@ -7,6 +7,8 @@
 #include <utility>
 #include <ros/console.h>
 
+
+
 namespace plt = matplotlibcpp;
 
 // moved to the hpp file
@@ -322,8 +324,8 @@ int main(int argc, char **argv)
 	ros::Publisher global_path = n.advertise<nav_msgs::Path>("/global_path", 1);		//Publish global path
 	ros::Publisher target_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);			//Publish velocity
 
-	//ros::Subscriber odom_sub = n.subscribe("/base_pose_ground_truth", 10, odom_callback);	
-	if(!gotOdom){
+	ros::Subscriber odom_sub = n.subscribe("/base_pose_ground_truth", 10, odom_callback);	
+	/*if(!gotOdom){
 		boost::shared_ptr<nav_msgs::Odometry const> sharedEdge;
 		nav_msgs::Odometry edge;
 		sharedEdge = ros::topic::waitForMessage<nav_msgs::Odometry>("/base_pose_ground_truth",n);
@@ -337,7 +339,7 @@ int main(int argc, char **argv)
 	}
 	else{
 		ros::Subscriber odom_sub = n.subscribe("/base_pose_ground_truth", 10, odom_callback);	
-	}
+	}*/
 	
 	ros::Subscriber costmap_sub = n.subscribe<nav_msgs::OccupancyGrid>("/move_base/local_costmap/costmap", 10000, costmap_callback);	//Subscribe the initial conditions
 	// ros::Subscriber goal_sub = n.subscribe("/move_base_simple/goal", 10, goal_callback);		//Goal 
