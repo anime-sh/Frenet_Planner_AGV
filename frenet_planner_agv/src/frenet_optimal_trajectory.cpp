@@ -341,16 +341,21 @@ inline bool sortByCost(FrenetPath a, FrenetPath b){
 }
 
 // check for specified velocity, acceleration, curvature constraints and collisions 
-vector<FrenetPath> check_path(vector<FrenetPath>& fplist, double bot_yaw, double yaw_error, double obst_r)
+FrenetPath check_path(vector<FrenetPath>& fplist,Spline2D csp, double bot_yaw, double yaw_error, double obst_r)
 {
 	vector<FrenetPath> fplist_final;
 	FrenetPath fp;
+	// double leastCost;
+	// bool first =true;
+	//int size=fplist.size();
+	sort(fplist.begin(),fplist.end(),sortByCost);
 	for(unsigned int i = 0; i < fplist.size(); i++)
 	{
 		// trace(i);
 		fp = fplist[i];
+		fp.adding_global_path(csp);
 		int flag = 0;
-		vecD path_yaw = fplist[i].get_yaw();
+		vecD path_yaw = fp.get_yaw();
 		if (path_yaw.size()==0)
 			continue;
 		// trace(path_yaw);
@@ -362,10 +367,11 @@ vector<FrenetPath> check_path(vector<FrenetPath>& fplist, double bot_yaw, double
 		if(flag == 1){continue;}
 		else if(fp.check_collision(obst_r)==0)
 		{
-			fplist_final.push_back(fplist[i]);
+			//fplist_final.push_back(fplist[i]);
+			return fp;
 		}			
 	}
-	return fplist_final;
+	//return fplist_final;
 }
 
 
@@ -401,9 +407,9 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 	trace("start");
 	vector<FrenetPath> fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0, lp);
 	trace("calc_global_paths");
-	fplist = calc_global_paths(fplist, csp);
+	//fplist = calc_global_paths(fplist, csp);
 	trace("check_path");
-	fplist = check_path(fplist, bot_yaw, 0.523599, 2.0); // for now maximum possilble paths are taken into list
+	FrenetPath bestpath = check_path(fplist,csp, bot_yaw, 0.523599, 2.0); // for now maximum possilble paths are taken into list
 	trace("done checking ");
 	// For displaying all paths
 	if(false)
@@ -411,18 +417,17 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 		display_paths(fplist);
 	}
 
-	double min_cost = FLT_MAX;
-	double cf;
-	FrenetPath bestpath;
-	for(auto & fp : fplist)
-	{
-		cf = fp.get_cf();
-		if(min_cost >= cf)
-		{
-			min_cost = cf;
-			bestpath = fp;
-		}
-	}
+	// double min_cost = FLT_MAX;
+	// double cf;
+	// for(auto & fp : fplist)
+	// {
+	// 	cf = fp.get_cf();
+	// 	if(min_cost >= cf)
+	// 	{
+	// 		min_cost = cf;
+	// 		bestpath = fp;
+	// 	}
+	// }
 	// For showing the bestpath
 	if(true)
 	{
