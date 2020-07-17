@@ -94,7 +94,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	::odom = *msg;
 	geometry_msgs::Pose p = odom.pose.pose;
 	trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
-	 ROS_INFO("Odom Received");
+	ROS_INFO("Odom Received");
 }
 
 
@@ -311,8 +311,10 @@ void publishPath(nav_msgs::Path &path_msg, FrenetPath &path, vecD &rk, vecD &rya
 }
 
 
+
 int main(int argc, char **argv)
 {
+	bool gotOdom =false;
 	ros::init(argc, argv, "frenet_planner");
 	ros::NodeHandle n;
 	
@@ -320,8 +322,23 @@ int main(int argc, char **argv)
 	ros::Publisher global_path = n.advertise<nav_msgs::Path>("/global_path", 1);		//Publish global path
 	ros::Publisher target_vel = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);			//Publish velocity
 
-	ros::Subscriber odom_sub = n.subscribe("/base_pose_ground_truth", 10, odom_callback);	
-	ros::Subscriber footprint_sub = n.subscribe<geometry_msgs::PolygonStamped>("/move_base/local_costmap/footprint", 10, footprint_callback);
+	//ros::Subscriber odom_sub = n.subscribe("/base_pose_ground_truth", 10, odom_callback);	
+	if(!gotOdom){
+		boost::shared_ptr<nav_msgs::Odometry const> sharedEdge;
+		nav_msgs::Odometry edge;
+		sharedEdge = ros::topic::waitForMessage<nav_msgs::Odometry>("/base_pose_ground_truth",n);
+		if(sharedEdge != NULL){
+		::odom = *sharedEdge;
+		geometry_msgs::Pose p = odom.pose.pose;
+		trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
+		ROS_INFO("Odom Received");
+		gotOdom = true;
+		}
+	}
+	else{
+		ros::Subscriber odom_sub = n.subscribe("/base_pose_ground_truth", 10, odom_callback);	
+	}
+	
 	ros::Subscriber costmap_sub = n.subscribe<nav_msgs::OccupancyGrid>("/move_base/local_costmap/costmap", 10000, costmap_callback);	//Subscribe the initial conditions
 	// ros::Subscriber goal_sub = n.subscribe("/move_base_simple/goal", 10, goal_callback);		//Goal 
 
@@ -370,6 +387,7 @@ int main(int argc, char **argv)
 	unsigned int ctr=0,i;
 	while(ros::ok())
 	{
+		
 		trace("intial conditions start");
 		//Specifing initial conditions for the frenet planner using odometry
 		if(ctr%10 == 0 or path.get_c().size() == 0)	
@@ -380,7 +398,7 @@ int main(int argc, char **argv)
 		{
 			initial_conditions_path(s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
 		}		
-		trace("frenet optimal planning",s0,c_d_d);
+		trace("frenet optimal planning",s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		//Getting the optimal frenet path
 		path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		lp = path;

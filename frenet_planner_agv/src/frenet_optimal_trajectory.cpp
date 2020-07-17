@@ -424,7 +424,7 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 		}
 	}
 	// For showing the bestpath
-	if(false)
+	if(true)
 	{
 		plt::ion();
 		plt::show();

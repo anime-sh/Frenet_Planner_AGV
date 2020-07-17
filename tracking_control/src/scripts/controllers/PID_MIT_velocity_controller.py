@@ -11,7 +11,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16
 from sensor_msgs.msg import Joy
 from nav_msgs.msg import Odometry
-import thread
+import _thread
 from prius_msgs.msg import Control
 
 # Node name        - controls
