@@ -155,21 +155,37 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 				fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di, di_d);
 				vecD d_ddd_vec = fp.get_d_ddd();
 				fp.set_Jp( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));  //
-				double minV = TARGET_SPEED - D_T_S*N_S_SAMPLE;
-				double maxV = TARGET_SPEED + D_T_S*N_S_SAMPLE;
-
-				for(double tv = minV; tv <= maxV + D_T_S; tv += D_T_S)  //sampling for longitudnal velocity
+				if(STOP_CAR)
 				{
+					// double minV=0;
+					// double maxV=0;
 					tfp = fp;
-					// tfp.calc_lon_paths(c_speed, s0, Ti, fp, tv, Jp);
-					
-					// Fixed S
-					// tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, fp, 15, tv); 
-					tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, tv); 
-					frenet_paths.push_back(tfp);		
-					// cerr<<tfp<<endl;
-
+						// tfp.calc_lon_paths(c_speed, s0, Ti, fp, tv, Jp);
+						
+						// Fixed S
+						// tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, fp, 15, tv); 
+						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, 0); 
+						frenet_paths.push_back(tfp);	
 				}
+				else
+				{
+					double minV = TARGET_SPEED - D_T_S*N_S_SAMPLE;
+					double maxV = TARGET_SPEED + D_T_S*N_S_SAMPLE;
+					for(double tv = minV; tv <= maxV + D_T_S; tv += D_T_S)  //sampling for longitudnal velocity
+					{
+						tfp = fp;
+						// tfp.calc_lon_paths(c_speed, s0, Ti, fp, tv, Jp);
+						
+						// Fixed S
+						// tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, fp, 15, tv); 
+						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, tv); 
+						frenet_paths.push_back(tfp);		
+						// cerr<<tfp<<endl;
+
+					}	
+				}
+				
+				
 			}
 		}
 	}
@@ -265,23 +281,28 @@ bool point_obcheck(geometry_msgs::Point32 p, double obst_r)
 	{
 		return 0;
 	}
-	if (it == ob_x.begin()){ 
+	if (it == ob_x.begin())
+	{ 
 		xlower = xupper = it - ob_x.begin(); // no smaller value  than val in vector
 	}
-	else if (it == ob_x.end()) {
+	else if (it == ob_x.end()) 
+	{
 		xupper = xlower = (it-1)- ob_x.begin(); // no bigger value than val in vector
 	}
-	else{
+	else
+	{
     	xlower = (it-1) - ob_x.begin();
     	xupper = it - ob_x.begin();
 	}
 	double dist1 = dist(p.x,p.y, ob_x[xlower], ob_y[xlower]);
 	double dist2 = dist(p.x, p.y, ob_x[xupper], ob_y[xupper]);
-	if(min(dist1, dist2) < obst_r){
+	if(min(dist1, dist2) < obst_r)
+	{
 		return 1;
 	}
 	it = lower_bound(ob_y.begin(), ob_y.end(), p.y);
-	if (it == ob_y.begin()) {
+	if (it == ob_y.begin()) 
+	{
 		ylower = yupper = it - ob_y.begin(); // no smaller value  than val in vector
 	}
 	else if (it == ob_y.end()) {

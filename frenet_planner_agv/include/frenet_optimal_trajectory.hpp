@@ -39,7 +39,7 @@ double KD;
 double KD_V;
 double KLAT;
 double KLON;
-
+bool STOP_CAR=false;
 //Waypoints
 vector<double> W_X;
 vector<double> W_Y;
