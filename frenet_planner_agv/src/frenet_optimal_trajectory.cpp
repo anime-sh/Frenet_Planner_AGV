@@ -148,15 +148,13 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 	{
 		for(double Ti = MINT; Ti <= MAXT + DT; Ti += DT)   //Sampling for prediction time
 		{
-			for(double di_d = -MAX_LAT_VEL; di_d <= MAX_LAT_VEL + D_D_NS; di_d+=D_D_NS)//Sampling for lateral velocity
+			if(STOP_CAR)
 			{
-				FrenetPath fp;
-				FrenetPath tfp;
-				fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di, di_d);
-				vecD d_ddd_vec = fp.get_d_ddd();
-				fp.set_Jp( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));  //
-				if(STOP_CAR)
-				{
+					FrenetPath fp;
+					FrenetPath tfp;
+					fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di,0);
+					vecD d_ddd_vec = fp.get_d_ddd();
+					fp.set_Jp( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));  //
 					// double minV=0;
 					// double maxV=0;
 					tfp = fp;
@@ -167,9 +165,16 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, 0); 
 						frenet_paths.push_back(tfp);	
 						cerr<<tfp.get_s_d()<<endl;
-				}
-				else
+			}
+			else
+			{
+				for(double di_d = -MAX_LAT_VEL; di_d <= MAX_LAT_VEL + D_D_NS; di_d+=D_D_NS)//Sampling for lateral velocity
 				{
+					FrenetPath fp;
+					FrenetPath tfp;
+					fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di, di_d);
+					vecD d_ddd_vec = fp.get_d_ddd();
+					fp.set_Jp( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));  //
 					double minV = TARGET_SPEED - D_T_S*N_S_SAMPLE;
 					double maxV = TARGET_SPEED + D_T_S*N_S_SAMPLE;
 					for(double tv = minV; tv <= maxV + D_T_S; tv += D_T_S)  //sampling for longitudnal velocity
@@ -183,11 +188,13 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 						frenet_paths.push_back(tfp);		
 						// cerr<<tfp<<endl;
 
-					}	
+					}		
 				}
-				
+					
 				
 			}
+			
+			
 		}
 	}
 	return frenet_paths;
