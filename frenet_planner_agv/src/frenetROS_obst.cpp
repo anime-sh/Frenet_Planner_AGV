@@ -96,7 +96,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 	::odom = *msg;
 	geometry_msgs::Pose p = odom.pose.pose;
 	trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
-	ROS_INFO("Odom Received");
+	// ROS_INFO("Odom Received");
 }
 
 
@@ -387,6 +387,7 @@ int main(int argc, char **argv)
 	FrenetPath lp;
 	double s0, c_d, c_d_d, c_d_dd, c_speed ;
 	unsigned int ctr=0,i;
+ 	double s_dest= calc_s(rx.back(),ry.back(),rx,ry);
 	while(ros::ok())
 	{
 		
@@ -402,6 +403,15 @@ int main(int argc, char **argv)
 		}		
 		trace("frenet optimal planning",s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		//Getting the optimal frenet path
+		if(s0==s_dest)
+		{
+			cerr<<"HOHOHOHOHOHOHOHOHOHOHOH"<<endl;
+			STOP_CAR=true;
+		}
+		else
+		{
+			STOP_CAR=false;
+		}
 		path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		lp = path;
 		trace("done");
