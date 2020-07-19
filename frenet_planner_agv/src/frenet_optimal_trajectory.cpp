@@ -166,6 +166,7 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 						// tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, fp, 15, tv); 
 						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, 0); 
 						frenet_paths.push_back(tfp);	
+						cerr<<tfp.get_s_d()<<endl;
 				}
 				else
 				{
@@ -305,16 +306,19 @@ bool point_obcheck(geometry_msgs::Point32 p, double obst_r)
 	{
 		ylower = yupper = it - ob_y.begin(); // no smaller value  than val in vector
 	}
-	else if (it == ob_y.end()) {
+	else if (it == ob_y.end()) 
+	{
 		yupper = ylower = (it-1)- ob_y.begin(); // no bigger value than val in vector
 	}
-	else{
+	else
+	{
     	ylower = (it-1) - ob_y.begin();
     	yupper = it - ob_y.begin();
 	}
 	dist1 = dist(p.x,p.y, ob_x[ylower], ob_y[ylower]);
 	dist2 = dist(p.x, p.y, ob_x[yupper], ob_y[yupper]);
-	if(min(dist1, dist2) < obst_r){
+	if(min(dist1, dist2) < obst_r)
+	{
 		return 1;		
 	}
 	return 0;	 

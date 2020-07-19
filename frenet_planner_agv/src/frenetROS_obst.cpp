@@ -407,6 +407,9 @@ int main(int argc, char **argv)
 		{
 			cerr<<"HOHOHOHOHOHOHOHOHOHOHOH"<<endl;
 			STOP_CAR=true;
+			c_d=0;
+			c_d_d=0;
+			
 		}
 		else
 		{
