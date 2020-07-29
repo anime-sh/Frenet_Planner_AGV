@@ -401,7 +401,7 @@ int main(int argc, char **argv)
 		s = s + dis;
 		global_s[i]=s;
 	}
-	int TATATA =10;
+	int TATATA =1;
  	double s_dest= global_s.back();
 	cerr<<"Global S:\n"<<global_s<<endl;
 	while(ros::ok())
