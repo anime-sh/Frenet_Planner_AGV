@@ -8,7 +8,7 @@ cost:
 
 path:
   max_speed: 13.89
-  max_accel: 2.0
+  max_accel: 5.0
   max_curvature: 1.0
   max_road_width: 10.0
   d_road_w: 1.0

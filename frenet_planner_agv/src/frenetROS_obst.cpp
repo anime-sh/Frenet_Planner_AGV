@@ -184,7 +184,7 @@ vecD global_path_yaw(Spline2D &csp, vecD &gx, vecD &gy)
 	return yaw;
 }
 
-void initial_conditions_path(double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
+void initial_conditions_path(Spline2D &csp,double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
 	// Approach 1
 	vecD d = path.get_d();
@@ -193,6 +193,7 @@ void initial_conditions_path(double &s0, double &c_speed, double &c_d, double &c
 	vecD d_dd = path.get_d_dd();
 	vecD s= path.get_s();
 
+	
 	s0= s[1];
 	c_speed = s_d[1];
 	c_d = d[1];
@@ -242,7 +243,7 @@ void initial_conditions_path(double &s0, double &c_speed, double &c_d, double &c
 	*/
 }
 
-void initial_conditions_new(Spline2D &csp, vecD &global_x, vecD &global_y, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
+void initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &global_y, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
 	//FrenetPath path;
 	double vx = odom.twist.twist.linear.x;
@@ -266,8 +267,8 @@ void initial_conditions_new(Spline2D &csp, vecD &global_x, vecD &global_y, doubl
 	if(curl2D < 0) 
 		c_d *= -1;
 
-	s0 = calc_s(min_x, min_y, global_x, global_y);
-	
+	// s0 = calc_s(min_x, min_y, global_x, global_y);
+	s0= global_s[min_id];	
 
 	bot_yaw = get_bot_yaw();
 	
@@ -380,44 +381,64 @@ int main(int argc, char **argv)
 	double ds = 0.1;	//ds represents the step size for cubic_spline
 	double bot_yaw,bot_v ;
 	//Global path is made using the waypoints
-	trace("csp go");
+	// cerr<<"csp go"<<endl;
 	Spline2D csp = calc_spline_course(W_X, W_Y, rx, ry, ryaw, rk, ds);
-	trace("csp done");
+	// cerr<<"csp done"<<endl;
 	FrenetPath path;
 	FrenetPath lp;
 	double s0, c_d, c_d_d, c_d_dd, c_speed ;
 	unsigned int ctr=0,i;
- 	double s_dest= calc_s(rx.back(),ry.back(),rx,ry);
+	// for(int i=0;i<rx.size();i++)
+	// {
+	// 	cerr<<calc_s(rx[i],ry[i],rx,ry)<<endl;
+	// }
+	vector<double> global_s(rx.size());
+	double s = 0;
+	global_s[0]=0;
+	for(unsigned int i = 1; i < rx.size(); i++)
+	{
+		double dis = calc_dis(rx[i], ry[i], rx[i - 1], ry[i - 1]);
+		s = s + dis;
+		global_s[i]=s;
+	}
+	int TATATA =1;
+ 	double s_dest= global_s.back();
+	cerr<<"Global S:\n"<<global_s<<endl;
 	while(ros::ok())
 	{
 		
-		trace("intial conditions start");
+		// cerr<<"intial conditions start"<<endl;;
 		//Specifing initial conditions for the frenet planner using odometry
-		if(ctr%10 == 0 or path.get_c().size() == 0)	
+		if(ctr%TATATA== 0 or path.get_c().size() == 0)	
 		{
-			initial_conditions_new(csp, rx , ry, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
+			initial_conditions_new(csp,global_s, rx , ry, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
 		}
 		else
 		{
-			initial_conditions_path(s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
+			initial_conditions_path(csp,s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
 		}		
+		// cerr<<"frenet optimal planning"<<endl;
 		trace("frenet optimal planning",s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		//Getting the optimal frenet path
-		if(s0==s_dest)
+		if(abs(s_dest-s0)<=100)
 		{
 			cerr<<"HOHOHOHOHOHOHOHOHOHOHOH"<<endl;
 			STOP_CAR=true;
+			TARGET_SPEED=0;
+			// TATATA=2;
 			// c_d=0;
 			// c_d_d=0;
-			// c_speed=0;
+			// c_speed/=2;
 		}
 		else
 		{
 			STOP_CAR=false;
 		}
+		// if(s0>=30)
+		// 	TATATA=1;
 		path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		lp = path;
-		trace("done");
+		// cerr<<"done"<<endl;;
 		nav_msgs::Path path_msg;
 		nav_msgs::Path global_path_msg;
 
@@ -439,7 +460,7 @@ int main(int argc, char **argv)
 			loc.pose.position.y = ry[i];
 			global_path_msg.poses.push_back(loc);
 		}
-		trace("407");
+		// cerr<<"407"<<endl;
 		if(false)
 		{
 			plt::ion();
@@ -454,8 +475,21 @@ int main(int argc, char **argv)
 		publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);	
 
 		//Next velocity along the path
-		bot_v = sqrt(pow(1 - rk[1]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));	
-
+		if(path.get_d().size()<=1 or path.get_s_d().size()<=1 or path.get_d_d().size()<=1)
+		{
+			bot_v = sqrt(pow(1 - rk[1]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));	
+		}
+		else 
+		{
+			if(STOP_CAR)
+				cerr<<"hi"<<endl;
+			bot_v = sqrt(pow(1 - rk[1]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) + pow(path.get_d_d()[1], 2));	
+		}
+		if(STOP_CAR)
+		{
+			// cerr<<c_d<<" "<<c_speed<<" "<<c_d_d<<endl;
+			cerr<<bot_v<<endl;
+		}
 		geometry_msgs::Twist vel;
 		vel.linear.x = bot_v;
 		vel.linear.y = 0;
