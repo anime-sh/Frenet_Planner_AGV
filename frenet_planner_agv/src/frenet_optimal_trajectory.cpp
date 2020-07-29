@@ -115,8 +115,9 @@ void FrenetPath::calc_lon_paths_quintic_poly(double c_speed, double s0, double T
 	}
 	//https://www.geeksforgeeks.org/std-inner_product-in-cpp/
 	Js = inner_product(s_ddd.begin(), s_ddd.end(), s_ddd.begin(), 0);
+	
 	double ds = pow((TARGET_SPEED - s_d.back()), 2);
-
+	
 	//calculation of lateral, longitudnal and overall cost of the trajectories
 	cd = (KJ*Jp + KT*Ti + KD*d.back()*d.back());
 	cv = (KJ*Js + KT*Ti + KD_V*ds);
@@ -164,7 +165,7 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 						// tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, fp, 15, tv); 
 						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, 0); 
 						frenet_paths.push_back(tfp);	
-						cerr<<tfp.get_s_d()<<endl;
+						// cerr<<tfp.get_s_d()<<endl;
 			}
 			else
 			{
@@ -190,8 +191,6 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 
 					}		
 				}
-					
-				
 			}
 			
 			
@@ -456,14 +455,14 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 		}
 	}
 	// For showing the bestpath
-	if(true)
+	if(false)
 	{
 		plt::ion();
 		plt::show();
 		bestpath.plot_path();
 	}
 	// For plotting velocity profile (x,y) = (t,s_d)
-	if(false)
+	if(true)
 	{
 		// trace("436");
 		plt::ion();
@@ -474,5 +473,11 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 		// trace("442");
 	}
 	trace("DONE");
+	if(STOP_CAR)
+	{
+		vector<double> chalja=bestpath.get_s_d();
+		if(chalja.size()>=2)
+			cerr<<"BEST PATH S_D[1] = "<<chalja[1]<<endl;
+	}
 	return bestpath;
 }
