@@ -11,52 +11,6 @@
 
 namespace plt = matplotlibcpp;
 
-// moved to the hpp file
-
-// inline vecD FrenetPath::get_x()
-// {
-// 	return x;
-// }
-
-// inline vecD FrenetPath::get_y()
-// {
-// 	return y;
-// }
-
-// inline vecD FrenetPath::get_d()
-// {
-// 	return d;
-// }
-
-// inline vecD FrenetPath::get_c()
-// {
-// 	return c;
-// }
-
-// inline vecD FrenetPath::get_s_d()
-// {
-// 	return s_d;
-// }
-
-// inline vecD FrenetPath::get_s()
-// {
-// 	return s;
-// }
-
-// inline vecD FrenetPath::get_d_d()
-// {
-// 	return d_d;
-// }
-
-// inline vecD FrenetPath::get_d_dd()
-// {
-// 	return d_dd;
-// }
-
-// inline vecD FrenetPath::get_yaw()
-// {
-// 	return yaw;
-// }
 
 //accesses the costmap and updates the obstacle coordinates
 void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
@@ -423,11 +377,12 @@ int main(int argc, char **argv)
 		//Getting the optimal frenet path
 		if(abs(s_dest-s0)<=100)
 		{
+
 			cerr<<"HOHOHOHOHOHOHOHOHOHOHOH"<<endl;
 			STOP_CAR=true;
 			TARGET_SPEED=0;
+			// TARGET_SPEED=max(0.00,TARGET_SPEED-0.5);
 			KD_V=2;
-
 			// TATATA=2;
 			// c_d=0;
 			// c_d_d=0;
@@ -476,9 +431,9 @@ int main(int argc, char **argv)
 
 		//Required tranformations on the Frenet path are made and pushed into message
 		publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);	
-		// auto calc_bot_v = [min_id](vecD &d, vecD& s_d,vecD& d_d){
-		// 	double bot_v = 
-		// };
+		auto calc_bot_v = [min_id,rk](vecD d, vecD s_d,vecD d_d){
+			return sqrt(pow(1 - rk[min_id]*d[d.size()/2], 2)*pow(s_d[s_d.size()/2], 2) + pow(d_d[d_d.size()/2], 2));	
+		};
 		//Next velocity along the path
 		if(path.get_d().size()<=1 or path.get_s_d().size()<=1 or path.get_d_d().size()<=1)
 		{
@@ -487,8 +442,14 @@ int main(int argc, char **argv)
 		else 
 		{
 			if(STOP_CAR)
+			{
 				cerr<<"hi"<<endl;
-			bot_v = sqrt(pow(1 - rk[min_id]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) + pow(path.get_d_d()[1], 2));	
+				bot_v = calc_bot_v (path.get_d(),path.get_s_d(),path.get_d_d());
+			}
+			else
+			{
+				bot_v = sqrt(pow(1 - rk[min_id]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) + pow(path.get_d_d()[1], 2));	
+			}
 		}
 		if(STOP_CAR)
 		{

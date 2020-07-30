@@ -1,6 +1,6 @@
 cost:
   kj: 0.01
-  kt: 1.0
+  kt: 2.0
   kd: 0.5
   kd_v: 0.5
   klat: 1.0

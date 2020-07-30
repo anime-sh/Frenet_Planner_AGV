@@ -117,8 +117,8 @@ void FrenetPath::calc_lon_paths_quintic_poly(double c_speed, double s0, double T
 	Js = inner_product(s_ddd.begin(), s_ddd.end(), s_ddd.begin(), 0);
 	
 	double ds = pow((TARGET_SPEED - s_d.back()), 2);
-	if(STOP_CAR and s_d.size()>=2)
-		ds=s_d[1]*s_d[1];
+	// if(STOP_CAR and s_d.size()>=2)
+	// 	ds=s_d[1]*s_d[1];
 	//calculation of lateral, longitudnal and overall cost of the trajectories
 	cd = (KJ*Jp + KT*Ti + KD*d.back()*d.back());
 	cv = (KJ*Js + KT*Ti + KD_V*ds);
@@ -154,7 +154,7 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 			{
 					FrenetPath fp;
 					FrenetPath tfp;
-					fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di,0);
+					fp.calc_lat_paths(c_d, c_d_d, c_d_dd, Ti, di,TARGET_SPEED);
 					vecD d_ddd_vec = fp.get_d_ddd();
 					fp.set_Jp( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));  //
 					// double minV=0;
@@ -164,7 +164,7 @@ vector<FrenetPath> calc_frenet_paths(double c_speed, double c_d, double c_d_d, d
 						
 						// Fixed S
 						// tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, fp, 15, tv); 
-						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, 0); 
+						tfp.calc_lon_paths_quintic_poly(c_speed, s0, Ti, 15, TARGET_SPEED); 
 						frenet_paths.push_back(tfp);	
 						// cerr<<tfp.get_s_d()<<endl;
 			}
