@@ -117,7 +117,8 @@ void FrenetPath::calc_lon_paths_quintic_poly(double c_speed, double s0, double T
 	Js = inner_product(s_ddd.begin(), s_ddd.end(), s_ddd.begin(), 0);
 	
 	double ds = pow((TARGET_SPEED - s_d.back()), 2);
-	
+	if(STOP_CAR and s_d.size()>=2)
+		ds=s_d[1]*s_d[1];
 	//calculation of lateral, longitudnal and overall cost of the trajectories
 	cd = (KJ*Jp + KT*Ti + KD*d.back()*d.back());
 	cv = (KJ*Js + KT*Ti + KD_V*ds);

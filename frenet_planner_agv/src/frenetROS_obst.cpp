@@ -403,7 +403,7 @@ int main(int argc, char **argv)
 	}
 	int TATATA =1;
  	double s_dest= global_s.back();
-	cerr<<"Global S:\n"<<global_s<<endl;
+	// cerr<<"Global S:\n"<<global_s<<endl;
 	while(ros::ok())
 	{
 		
@@ -425,6 +425,8 @@ int main(int argc, char **argv)
 			cerr<<"HOHOHOHOHOHOHOHOHOHOHOH"<<endl;
 			STOP_CAR=true;
 			TARGET_SPEED=0;
+			KD_V=2;
+
 			// TATATA=2;
 			// c_d=0;
 			// c_d_d=0;
