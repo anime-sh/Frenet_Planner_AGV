@@ -243,7 +243,7 @@ void initial_conditions_path(Spline2D &csp,double &s0, double &c_speed, double &
 	*/
 }
 
-void initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &global_y, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
+int initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &global_y, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
 	//FrenetPath path;
 	double vx = odom.twist.twist.linear.x;
@@ -287,6 +287,7 @@ void initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD 
 	c_speed = v*cos(delta_theta) / (1 - k_r*c_d); //s_dot (Equation 7)
 
 	c_d_dd = 0; // For the time being. Need to be updated
+	return min_id;
 }
 
 //publishes path as ros messages
@@ -406,12 +407,12 @@ int main(int argc, char **argv)
 	// cerr<<"Global S:\n"<<global_s<<endl;
 	while(ros::ok())
 	{
-		
+		int min_id=0;
 		// cerr<<"intial conditions start"<<endl;;
 		//Specifing initial conditions for the frenet planner using odometry
-		if(ctr%TATATA== 0 or path.get_c().size() == 0)	
+		if(true)	
 		{
-			initial_conditions_new(csp,global_s, rx , ry, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
+			min_id = initial_conditions_new(csp,global_s, rx , ry, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
 		}
 		else
 		{
@@ -475,17 +476,19 @@ int main(int argc, char **argv)
 
 		//Required tranformations on the Frenet path are made and pushed into message
 		publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);	
-
+		// auto calc_bot_v = [min_id](vecD &d, vecD& s_d,vecD& d_d){
+		// 	double bot_v = 
+		// };
 		//Next velocity along the path
 		if(path.get_d().size()<=1 or path.get_s_d().size()<=1 or path.get_d_d().size()<=1)
 		{
-			bot_v = sqrt(pow(1 - rk[1]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));	
+			bot_v = sqrt(pow(1 - rk[min_id]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));	
 		}
 		else 
 		{
 			if(STOP_CAR)
 				cerr<<"hi"<<endl;
-			bot_v = sqrt(pow(1 - rk[1]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) + pow(path.get_d_d()[1], 2));	
+			bot_v = sqrt(pow(1 - rk[min_id]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) + pow(path.get_d_d()[1], 2));	
 		}
 		if(STOP_CAR)
 		{
