@@ -375,14 +375,15 @@ int main(int argc, char **argv)
 		// cerr<<"frenet optimal planning"<<endl;
 		trace("frenet optimal planning",s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		//Getting the optimal frenet path
-		if(abs(s_dest-s0)<=100)
+		if(abs(s_dest-s0)<=50)
 		{
 
 			cerr<<"HOHOHOHOHOHOHOHOHOHOHOH"<<endl;
 			STOP_CAR=true;
 			TARGET_SPEED=0;
-			// TARGET_SPEED=max(0.00,TARGET_SPEED-0.5);
+			// TARGET_SPEED=max(0.00,c_speed-0.5);
 			KD_V=2;
+			KT=.1;
 			// TATATA=2;
 			// c_d=0;
 			// c_d_d=0;
@@ -391,6 +392,10 @@ int main(int argc, char **argv)
 		else
 		{
 			STOP_CAR=false;
+		}
+		if(abs(s0-s_dest)<=5)
+		{
+			c_speed/=2;
 		}
 		// if(s0>=30)
 		// 	TATATA=1;
@@ -433,6 +438,7 @@ int main(int argc, char **argv)
 		publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);	
 		auto calc_bot_v = [min_id,rk](vecD d, vecD s_d,vecD d_d){
 			return sqrt(pow(1 - rk[min_id]*d[d.size()/2], 2)*pow(s_d[s_d.size()/2], 2) + pow(d_d[d_d.size()/2], 2));	
+			// return sqrt(pow(1 - rk[min_id]*d[1], 2)*pow(s_d[1], 2) + pow(d_d[1], 2));	
 		};
 		//Next velocity along the path
 		if(path.get_d().size()<=1 or path.get_s_d().size()<=1 or path.get_d_d().size()<=1)
