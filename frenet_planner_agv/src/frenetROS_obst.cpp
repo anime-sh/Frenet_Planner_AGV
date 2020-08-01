@@ -88,6 +88,7 @@ void find_nearest_in_global_path(vecD &global_x, vecD &global_y, double &min_x, 
 	}
 }
 
+/*
 //calculates s 
 double calc_s(double ptx, double pty, vecD &global_x, vecD &global_y)
 {
@@ -109,7 +110,7 @@ double calc_s(double ptx, double pty, vecD &global_x, vecD &global_y)
 
 	return s;
 }
-
+*/
 
 inline double get_bot_yaw()
 {
@@ -125,7 +126,7 @@ inline double get_bot_yaw()
 }
 
 
-vecD global_path_yaw(Spline2D &csp, vecD &gx, vecD &gy)
+/*vecD global_path_yaw(Spline2D &csp, vecD &gx, vecD &gy)
 {
 	vecD yaw;
 	vecD t = csp.calc_s(gx, gy);
@@ -136,7 +137,7 @@ vecD global_path_yaw(Spline2D &csp, vecD &gx, vecD &gy)
 		yaw[i]=csp.calc_yaw(t[i]);
 	}
 	return yaw;
-}
+}*/
 
 void initial_conditions_path(Spline2D &csp,double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
@@ -197,7 +198,7 @@ void initial_conditions_path(Spline2D &csp,double &s0, double &c_speed, double &
 	*/
 }
 
-int initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &global_y, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
+int initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &global_y,vecD &global_R, vecD &global_yaw, double &s0, double &c_speed, double &c_d, double &c_d_d, double &c_d_dd, double &bot_yaw, FrenetPath &path)
 {
 	//FrenetPath path;
 	double vx = odom.twist.twist.linear.x;
@@ -226,9 +227,9 @@ int initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &
 
 	bot_yaw = get_bot_yaw();
 	
-	vecD theta = global_path_yaw(csp, global_x, global_y);
+	//vecD theta = global_path_yaw(csp, global_x, global_y);
 	// trace(theta);
-	double g_path_yaw = theta[min_id];	
+	double g_path_yaw = global_yaw[min_id];	
 
 	trace(bot_yaw,g_path_yaw);
 	double delta_theta = bot_yaw - g_path_yaw;
@@ -236,7 +237,7 @@ int initial_conditions_new(Spline2D &csp, vecD & global_s,vecD &global_x, vecD &
 	trace(delta_theta);
 	c_d_d = v*sin(delta_theta);//Equation 5
 
-	double k_r = csp.calc_curvature(s0);
+	double k_r = global_R[min_id];
 
 	c_speed = v*cos(delta_theta) / (1 - k_r*c_d); //s_dot (Equation 7)
 
@@ -366,7 +367,7 @@ int main(int argc, char **argv)
 		//Specifing initial conditions for the frenet planner using odometry
 		if(true)	
 		{
-			min_id = initial_conditions_new(csp,global_s, rx , ry, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
+			min_id = initial_conditions_new(csp,global_s, rx , ry, rk, ryaw, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw,path);
 		}
 		else
 		{
