@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
-#include <stdint.h> // <cstdint> requires c++11 support
+#include <stdint.h>  // <cstdint> requires c++11 support
 
 #if __cplusplus > 199711L || _MSC_VER > 1800
 #  include <functional>
@@ -17,7 +17,7 @@
 #ifndef WITHOUT_NUMPY
 #  define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #  include <numpy/arrayobject.h>
-#endif // WITHOUT_NUMPY
+#endif  // WITHOUT_NUMPY
 
 #if PY_MAJOR_VERSION >= 3
 #  define PyString_FromString PyUnicode_FromString
@@ -75,26 +75,24 @@ struct _interpreter {
     }
 
 private:
-
 #ifndef WITHOUT_NUMPY
 #  if PY_MAJOR_VERSION >= 3
 
     void *import_numpy() {
-        import_array(); // initialize C-API
+        import_array();  // initialize C-API
         return NULL;
     }
 
 #  else
 
     void import_numpy() {
-        import_array(); // initialize C-API
+        import_array();  // initialize C-API
     }
 
 #  endif
 #endif
 
     _interpreter() {
-
         // optional but recommended
 #if PY_MAJOR_VERSION >= 3
         wchar_t name[] = L"plotting";
@@ -105,7 +103,7 @@ private:
         Py_Initialize();
 
 #ifndef WITHOUT_NUMPY
-        import_numpy(); // initialize numpy C-API
+        import_numpy();  // initialize numpy C-API
 #endif
 
         PyObject* matplotlibname = PyString_FromString("matplotlib");
@@ -122,14 +120,13 @@ private:
         // matplotlib.use() must be called *before* pylab, matplotlib.pyplot,
         // or matplotlib.backends is imported for the first time
         if (!s_backend.empty()) {
-            PyObject_CallMethod(matplotlib, const_cast<char*>("use"), const_cast<char*>("s"), s_backend.c_str());
+            PyObject_CallMethod(matplotlib, const_cast<char*>("use"), const_cast<char*>("s"),
+            s_backend.c_str());
         }
 
         PyObject* pymod = PyImport_Import(pyplotname);
         Py_DECREF(pyplotname);
         if (!pymod) { throw std::runtime_error("Error loading module matplotlib.pyplot!"); }
-
-
         PyObject* pylabmod = PyImport_Import(pylabname);
         Py_DECREF(pylabname);
         if (!pylabmod) { throw std::runtime_error("Error loading module pylab!"); }
@@ -145,7 +142,7 @@ private:
         s_python_function_semilogy = PyObject_GetAttrString(pymod, "semilogy");
         s_python_function_loglog = PyObject_GetAttrString(pymod, "loglog");
         s_python_function_fill_between = PyObject_GetAttrString(pymod, "fill_between");
-        s_python_function_hist = PyObject_GetAttrString(pymod,"hist");
+        s_python_function_hist = PyObject_GetAttrString(pymod, "hist");
         s_python_function_subplot = PyObject_GetAttrString(pymod, "subplot");
         s_python_function_legend = PyObject_GetAttrString(pymod, "legend");
         s_python_function_ylim = PyObject_GetAttrString(pymod, "ylim");
@@ -159,7 +156,7 @@ private:
         s_python_function_xlim = PyObject_GetAttrString(pymod, "xlim");
         s_python_function_ion = PyObject_GetAttrString(pymod, "ion");
         s_python_function_save = PyObject_GetAttrString(pylabmod, "savefig");
-        s_python_function_annotate = PyObject_GetAttrString(pymod,"annotate");
+        s_python_function_annotate = PyObject_GetAttrString(pymod, "annotate");
         s_python_function_clf = PyObject_GetAttrString(pymod, "clf");
         s_python_function_errorbar = PyObject_GetAttrString(pymod, "errorbar");
         s_python_function_tight_layout = PyObject_GetAttrString(pymod, "tight_layout");
@@ -235,7 +232,7 @@ private:
     }
 };
 
-} // end namespace detail
+}  // end namespace detail
 
 // must be called before the first regular call to matplotlib to have any effect
 inline void backend(const std::string& name)
@@ -248,8 +245,8 @@ inline bool annotate(std::string annotation, double x, double y)
     PyObject * xy = PyTuple_New(2);
     PyObject * str = PyString_FromString(annotation.c_str());
 
-    PyTuple_SetItem(xy,0,PyFloat_FromDouble(x));
-    PyTuple_SetItem(xy,1,PyFloat_FromDouble(y));
+    PyTuple_SetItem(xy, 0, PyFloat_FromDouble(x));
+    PyTuple_SetItem(xy, 1, PyFloat_FromDouble(y));
 
     PyObject* kwargs = PyDict_New();
     PyDict_SetItemString(kwargs, "xy", xy);
@@ -257,7 +254,8 @@ inline bool annotate(std::string annotation, double x, double y)
     PyObject* args = PyTuple_New(1);
     PyTuple_SetItem(args, 0, str);
 
-    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_annotate, args, kwargs);
+    PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_annotate, args,
+    kwargs);
 
     Py_DECREF(args);
     Py_DECREF(kwargs);
@@ -1083,7 +1081,7 @@ inline void show(const bool block = true)
         PyObject *kwargs = PyDict_New();
         PyDict_SetItemString(kwargs, "block", Py_False);
         res = PyObject_Call( detail::_interpreter::get().s_python_function_show, detail::_interpreter::get().s_python_empty_tuple, kwargs);
-	Py_DECREF(kwargs);
+  Py_DECREF(kwargs);
     }
 
 
