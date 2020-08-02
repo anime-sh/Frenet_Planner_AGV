@@ -5,7 +5,7 @@
 #include <eigen3/Eigen/Dense>
 #include <cmath>
 
-using Eigen;
+using namespace Eigen;
 
 class quintic{
 private:

@@ -6,11 +6,10 @@
 #include <cmath>
 
 #define NONE -1e9
-using std;
-using Eigen;
+using namespace std;
+using namespace Eigen;
 
-typedef vector<double> vecD;
-
+using vecD =  vector<double>;
 class Spline
 {
   private:
