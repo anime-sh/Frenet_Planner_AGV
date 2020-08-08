@@ -252,6 +252,8 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
     s.push_back(sInc);
     sInc = sInc + ds;
   }
+  // for(i =0 ; i*ds<sRange;i++)  i*ds = sInc
+  //   s[i]=i*ds;
   rx.resize(s.size());
   ry.resize(s.size());
   ryaw.resize(s.size());

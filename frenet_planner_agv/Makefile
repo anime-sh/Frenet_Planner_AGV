@@ -1,5 +1,4 @@
 Sources = src/cubic_spline_planner.cpp src/polynomials.cpp src/frenet_optimal_trajectory.cpp tests/test.cpp
-
 Target = test.out
 
 # general compiler settings
