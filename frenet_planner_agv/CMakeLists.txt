@@ -3,8 +3,9 @@ project(frenet_planner)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
+# -I/usr/include/python2.7 -lpython2.7
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3 -fopt-info-vec-missed")
+set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -27,7 +28,21 @@ find_package(catkin REQUIRED COMPONENTS
   #tf_convesion
 )
 
+# find_package(PythonLibs 2.7)
+# target_include_directories(frenet_planner PRIVATE ${PYTHON_INCLUDE_DIRS})
+# target_link_libraries(frenet_planner ${PYTHON_LIBRARIES})
+
 #find_package(PythonLibs 2.7 EXACT)
+
+#find_package(PythonLibs REQUIRED)
+# set(SOURCES /include/matplotlibcpp.h ${/usr/include/python2.7}/Python.h)
+# add_executable(test ${SOURCES})
+#include_directories(${PYTHON_INCLUDE_DIRS}) 
+#target_link_libraries(<your exe or lib> ${PYTHON_LIBRARIES})
+
+SET (PYTHON_PATH "/usr/include/python2.7/")       #imp to include python.h in matplotlibcpp.h
+
+
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
 message(STATUS "${CMAKE_MODULE_PATH}")
@@ -149,7 +164,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
-  /usr/include/python2.7
+  ${PYTHON_PATH}                 
 )
 
 # list(APPEND "-std=c++11")
@@ -190,7 +205,8 @@ add_executable(frenet_planner src/frenetROS_obst.cpp)
 
 target_link_libraries(frenet_planner
 	${catkin_LIBRARIES}
-	${EIGEN3_LIBRARIES}
+  ${EIGEN3_LIBRARIES}
+  ${PYTHON_LIBRARIES}
 	frenet_include
 )
 #############
@@ -240,3 +256,12 @@ target_link_libraries(frenet_planner
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+find_package(PythonLibs 2.7)
+target_include_directories(frenet_planner PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(frenet_planner ${PYTHON_LIBRARIES})
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
