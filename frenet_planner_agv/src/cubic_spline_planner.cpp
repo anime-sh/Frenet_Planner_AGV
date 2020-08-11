@@ -25,7 +25,8 @@ where h_i = x_i - x_i-1
 void printVecD(vecD A)
 {
   cout << "\n------------Printing the vector----------\n";
-  for(unsigned int i = 0; i < A.size(); i++)
+  int n = A.size();
+  for(unsigned int i = 0; i < n; i++)
     cout << A[i] << "\n";
   cout << "\n-----------------------------------------\n" << endl;
 }
@@ -34,16 +35,22 @@ MatrixXd Spline::calc_A(vecD h)  // get matrix A
 {
   MatrixXd A = MatrixXd::Zero(nx, nx);
   A(0, 0) = 1.0;
-  for(int i = 0; i < nx - 1; i++)
+  // for(int i = 0; i < nx - 1; i++)
+  // {
+  //   if(i != nx - 2)
+  //     A(i + 1, i + 1) = 2.0*(h[i] + h[i + 1]);
+  //   A(i + 1, i) = h[i];
+  //   A(i, i + 1) = h[i];
+  // }
+  for(int i = 0; i < nx - 2; i++) //auto vectorized version
   {
-    if(i != nx - 2)
-      A(i + 1, i + 1) = 2.0*(h[i] + h[i + 1]);
+    A(i + 1, i + 1) = 2.0*(h[i] + h[i + 1]);
     A(i + 1, i) = h[i];
     A(i, i + 1) = h[i];
   }
-
   A(0, 1) = 0.0;
   A(nx - 1, nx - 2) = 0.0;
+  A(nx-2, nx - 1) = h[ nx - 2 ]; //added later
   A(nx - 1, nx - 1) = 1.0;
 
   return A;
