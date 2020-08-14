@@ -26,6 +26,7 @@ void printVecD(vecD A)
 {
   cout << "\n------------Printing the vector----------\n";
   int n = A.size();
+  #pragma omp
   for(unsigned int i = 0; i < n; i++)
     cout << A[i] << "\n";
   cout << "\n-----------------------------------------\n" << endl;
@@ -42,7 +43,7 @@ MatrixXd Spline::calc_A(vecD h)  // get matrix A
   //   A(i + 1, i) = h[i];
   //   A(i, i + 1) = h[i];
   // }
-  for(int i = 0; i < nx - 2; i++) //auto vectorized version
+  for(int i = 0; i < nx - 2; i++) //not auto vectorized since not consequitive memory access and no grouped stores in basic block
   {
     A(i + 1, i + 1) = 2.0*(h[i] + h[i + 1]);
     A(i + 1, i) = h[i];
@@ -83,8 +84,9 @@ void Spline::init(vecD x_in, vecD y_in)  // calculates the coeffs for splines
   y = y_in;
   nx = x.size();
   vecD h;
+  h.resize(nx-1);
   for(int i = 1; i < nx; i++)
-    h.push_back(x[i] - x[i - 1]);
+    h[i-1]=x[i] - x[i - 1];
   a = y;
 
   MatrixXd A = calc_A(h);
@@ -93,13 +95,24 @@ void Spline::init(vecD x_in, vecD y_in)  // calculates the coeffs for splines
 
   MatrixXd C = A.inverse()*B;  // C = A^(-1)*B
 
-  for(int i = 0; i < C.rows(); ++i)
-    c.push_back(C(i, 0));
+  int size_c=C.rows();
+
+  c.resize(size_c);
+
+
+  for(int i = 0; i < size_c; ++i)
+    c[i]=(C(i, 0));
+  
+  //int size_d=nx-1;
+
+  d.resize(nx-1);
+  b.resize(nx-1);
+  
   for(int i = 0; i < nx -1; i++)
   {
-    d.push_back((c[i + 1] - c[i]) / (3.0*h[i]));
+    d[i]=((c[i + 1] - c[i]) / (3.0*h[i]));
     double tb = (a[i + 1] - a[i]) / h[i] - h[i]*(c[i + 1] + 2.0*c[i]) / 3.0;
-    b.push_back(tb);
+    b[i]=(tb);
   }
 }
 
@@ -168,29 +181,37 @@ y = g(s)
 vecD Spline2D::calc_s(vecD x, vecD y)  // approximately calculates s along the spline
 {
   vecD dx;
-  for(unsigned int i = 1; i < x.size(); i++)
+  dx.resize(x.size());
+  unsigned int sizex=x.size();
+  for(unsigned int i = 1; i < sizex; i++)
   {
-    dx.push_back(x[i] - x[i - 1]);
+    dx[i-1]=(x[i] - x[i - 1]);
   }
   vecD dy;
-  for(unsigned int i = 1; i < x.size(); i++)
+  dy.resize(y.size());
+  unsigned int sizey=y.size();
+  for(unsigned int i = 1; i < sizey; i++)
   {
-    dy.push_back(y[i] - y[i - 1]);
+    dy[i-1]=(y[i] - y[i - 1]);
   }
   ds.clear();
-  for(unsigned int i = 0; i < dx.size(); i++)
+  unsigned int sizedx=dx.size();
+  ds.resize(sizedx);
+  
+  for(unsigned int i = 0; i < sizedx; i++)
   {
     double temp;
     temp = sqrt(dx[i]*dx[i] + dy[i]*dy[i]);
-    ds.push_back(temp);
+    ds[i]=temp;
   }
 
   vecD t;
-  t.push_back(0);
+  t.resize(sizedx+1);
+  t[0]=0;
 
-  for(unsigned int i = 0; i < ds.size(); i++)
+  for(unsigned int i = 0; i < sizedx; i++)
   {
-    t.push_back(t.back() + ds[i]);
+    t[i+1]=t[i] + ds[i];
   }
 
   return t;
@@ -250,17 +271,17 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
   vecD s;
   double sRange = sp.get_s_last();
   double sInc = 0;
-  while(1)
-  {
-    if(sInc >= sRange)
-    {
-      break;
-    }
-    s.push_back(sInc);
-    sInc = sInc + ds;
-  }
-  // for(i =0 ; i*ds<sRange;i++)  i*ds = sInc
-  //   s[i]=i*ds;
+  // while(1)
+  // {
+  //   if(sInc >= sRange)
+  //   {
+  //     break;
+  //   }
+  //   s.push_back(sInc);
+  //   sInc = sInc + ds;
+  // }
+  for(int i =0 ; i*ds<sRange;i++)  //i*ds = sInc
+    s[i]=i*ds;
   rx.resize(s.size());
   ry.resize(s.size());
   ryaw.resize(s.size());

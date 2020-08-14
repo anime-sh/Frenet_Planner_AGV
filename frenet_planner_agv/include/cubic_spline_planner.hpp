@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <omp.h>
 
 #define NONE -1e9
 using namespace std;
