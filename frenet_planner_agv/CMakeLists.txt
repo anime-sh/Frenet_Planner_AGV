@@ -5,7 +5,7 @@ project(frenet_planner)
 # add_compile_options(-std=c++11)
 # -I/usr/include/python2.7 -lpython2.7
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3 -fopt-info-vec-optimized")
+set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
