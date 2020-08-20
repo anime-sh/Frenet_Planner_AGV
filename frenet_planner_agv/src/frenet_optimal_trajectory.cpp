@@ -10,15 +10,26 @@ void FrenetPath::calc_lat_paths (double c_d, double c_d_d, double c_d_dd, double
 double di_d)
 {
   // trace(c_d,c_d_d,c_d_dd,Ti,di,di_d);
+  int n=1+Ti/DT;
+	t.resize(n);
+	d.resize(n);
+	d_d.resize(n);
+	d_dd.resize(n);
+	d_ddd.resize(n);
+	// omp_set_num_threads(4);
+	//double startTime = omp_get_wtime();
+	// #pragma omp for simd 
+	// {
+		
   quintic lat_qp(c_d, c_d_d, c_d_dd, di, di_d, 0.0, Ti);
-  for(double te = 0.0; te <= Ti + DT; te += DT)
-  {
-    t.emplace_back(te);
-    d.emplace_back(lat_qp.calc_point(te));
-    d_d.emplace_back(lat_qp.calc_first_derivative(te));
-    d_dd.emplace_back(lat_qp.calc_second_derivative(te));
-    d_ddd.emplace_back(lat_qp.calc_third_derivative(te));
-  }
+  for(int te = 0; te <n; te ++)
+		{
+			t[te] =te*DT;
+			d[te]= lat_qp.calc_point(te*DT);
+			d_d[te] = lat_qp.calc_first_derivative(te*DT);
+			d_dd[te]= lat_qp.calc_second_derivative(te*DT);
+			d_ddd[te] = lat_qp.calc_third_derivative(te*DT);
+		}
 }
 
 // calculates longitudnal paths  using quartic polynomial
@@ -127,7 +138,7 @@ double s0, FrenetPath lp)
   lower_limit_d = -MAX_ROAD_WIDTH;
   upper_limit_d = MAX_ROAD_WIDTH + D_ROAD_W;
   get_limits_d(lp, &lower_limit_d, &upper_limit_d);  // IF not required to sample around previous
-                                                     // sampled d(th) then comment this line.
+                                                     // sampled d(th) then comment this line. 
   for(double di = lower_limit_d; di <= upper_limit_d; di += D_ROAD_W)  // sampling for lateral
                                                                        // offset
   {
@@ -421,7 +432,7 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
     bestpath.plot_path();
   }
   // For plotting velocity profile (x,y) = (t,s_d)
-  if(true)
+  if(false)
   {
     plt::ion();
     plt::show();

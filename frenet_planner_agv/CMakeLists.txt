@@ -5,7 +5,7 @@ project(frenet_planner)
 # add_compile_options(-std=c++11)
 # -I/usr/include/python2.7 -lpython2.7
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -O3")
+set (CMAKE_CXX_FLAGS "  -Wall -Wextra -Wpedantic  -ltbb -O3 -fopenmp -fsanitize=address,undefined")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -42,8 +42,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 SET (PYTHON_PATH "/usr/include/python2.7/")       #imp to include python.h in matplotlibcpp.h
 
-
-
+SET (TBB_DIR  ${PROJECT_SOURCE_DIR}/TBBConfig.cmake) 
+find_package(TBB)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
 message(STATUS "${CMAKE_MODULE_PATH}")
 find_package(Boost REQUIRED COMPONENTS system thread graph)
@@ -207,8 +207,12 @@ target_link_libraries(frenet_planner
 	${catkin_LIBRARIES}
   ${EIGEN3_LIBRARIES}
   ${PYTHON_LIBRARIES}
+  ${TBB_LIBRARIES}
 	frenet_include
 )
+
+# FIND_PACKAGE( tbb REQUIRED )
+#     LINK_DIRECTORIES( ${LIBRARYPATH} )
 #############
 ## Install ##
 #############

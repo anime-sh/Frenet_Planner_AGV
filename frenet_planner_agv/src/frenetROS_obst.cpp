@@ -12,6 +12,7 @@
 namespace plt = matplotlibcpp;
 
 
+
 // accesses the costmap and updates the obstacle coordinates
 void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 {
@@ -253,90 +254,99 @@ int main(int argc, char **argv)
   double s_dest = global_s.back();
   while(ros::ok())
   {
-	int min_id = 0;
-	// Specifing initial conditions for the frenet planner using odometry
-	if (true)
-	{
-	  min_id = initial_conditions_new(csp, global_s, rx, ry, rk, ryaw, s0, c_speed, c_d, c_d_d,
-	  c_d_dd, bot_yaw, path);
-	} else {
-	  initial_conditions_path(csp, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
-	}
-	trace("frenet optimal planning", s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
-	if (abs(s_dest-s0) <= 50)
-	{
-	  STOP_CAR = true;
-	  TARGET_SPEED = 0;
-	  KD_V = 2;
-	  KT = 0.1;
-	} else{
-	  STOP_CAR = false;
-	}
-	if(abs(s0-s_dest) <= 5)  
-	{
-	  c_speed /= 2;
-	}
-	// Getting the optimal frenet path
-	path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
-	lp = path;
-	nav_msgs::Path path_msg;
-	nav_msgs::Path global_path_msg;
+    int min_id = 0;
+    // Specifing initial conditions for the frenet planner using odometry
+    double startTime1 = omp_get_wtime();
+    if (true)
+    {
+      min_id = initial_conditions_new(csp, global_s, rx, ry, rk, ryaw, s0, c_speed, c_d, c_d_d,
+      c_d_dd, bot_yaw, path);
+    } else {
+      initial_conditions_path(csp, s0, c_speed, c_d, c_d_d, c_d_dd, bot_yaw, path);
+    }
+    double endTime1 = omp_get_wtime();
+    trace("frenet optimal planning", s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
+    if (abs(s_dest-s0) <= 50)
+    {
+      STOP_CAR = true;
+      TARGET_SPEED = 0;
+      KD_V = 2;
+      KT = 0.1;
+    } else{
+      STOP_CAR = false;
+    }
+    if(abs(s0-s_dest) <= 5)  
+    {
+      c_speed /= 2;
+    }
+    // Getting the optimal frenet path
+    double startTime2 = omp_get_wtime();
+    path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
+    double endTime2 = omp_get_wtime();
+    lp = path;
+    nav_msgs::Path path_msg;
+    nav_msgs::Path global_path_msg;
 
-	// paths are published in map frame
-	path_msg.header.frame_id = "map";
-	global_path_msg.header.frame_id = "map";
+    // paths are published in map frame
+    path_msg.header.frame_id = "map";
+    global_path_msg.header.frame_id = "map";
 
-	// Global path pushed into the message
-	for(i = 0; i < rx.size(); i++)
-	{
-	  geometry_msgs::PoseStamped loc;
-	  loc.pose.position.x = rx[i];
-	  loc.pose.position.y = ry[i];
-	  global_path_msg.poses.push_back(loc);
-	}
-	if(false)
-	{
-	  plt::ion();
-	  plt::show();
-	  plt::plot(lp.get_x(), lp.get_y());
-	  plt::pause(0.001);
-	  plt::plot(rx, ry);
-	  plt::pause(0.001);
-	}
-	// Required tranformations on the Frenet path are made and pushed into message
-	publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);
+    global_path_msg.poses.resize(rx.size());
+    // Global path pushed into the message
+    for(i = 0; i < rx.size(); i++)
+    {
+      geometry_msgs::PoseStamped loc;
+      loc.pose.position.x = rx[i];
+      loc.pose.position.y = ry[i];
+      global_path_msg.poses[i]=loc;
+    }
+    if(false)
+    {
+      plt::ion();
+      plt::show();
+      plt::plot(lp.get_x(), lp.get_y());
+      plt::pause(0.001);
+      plt::plot(rx, ry);
+      plt::pause(0.001);
+    }
+    // Required tranformations on the Frenet path are made and pushed into message
+    double startTime3 = omp_get_wtime();
+    publishPath(path_msg, path, rk, ryaw, c_d, c_speed, c_d_d);
+    double endTime3 = omp_get_wtime();
+    auto calc_bot_v = [min_id, rk](vecD d, vecD s_d, vecD d_d){
+      return sqrt(pow(1 - rk[min_id]*d[d.size()/2], 2)*pow(s_d[s_d.size()/2], 2) +
+      pow(d_d[d_d.size()/2], 2));
+    };
 
-	auto calc_bot_v = [min_id, rk](vecD d, vecD s_d, vecD d_d){
-	  return sqrt(pow(1 - rk[min_id]*d[d.size()/2], 2)*pow(s_d[s_d.size()/2], 2) +
-	  pow(d_d[d_d.size()/2], 2));
-	};
-
-	// Next velocity along the path
-	if (path.get_d().size() <= 1 || path.get_s_d().size() <= 1 || path.get_d_d().size() <= 1)
-	{
-	  bot_v = sqrt(pow(1 - rk[min_id]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));
-	} else{
-	  if(STOP_CAR)
-	  {
-		cerr<< "hi" << endl;
-		bot_v = calc_bot_v (path.get_d(), path.get_s_d(), path.get_d_d());
-	  } else {
-		bot_v = sqrt(pow(1 - rk[min_id]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) +
-		pow(path.get_d_d()[1], 2));
-	  }
-	}
-	if(STOP_CAR)
-	{
-	  cerr<< bot_v << endl;
-	}
-	geometry_msgs::Twist vel;
-	vel.linear.x = bot_v;
-	vel.linear.y = 0;
-	vel.linear.z = 0;
-	frenet_path.publish(path_msg);
-	global_path.publish(global_path_msg);
-	target_vel.publish(vel);
-	ctr++;
-	ros::spinOnce();
+    // Next velocity along the path
+    if (path.get_d().size() <= 1 || path.get_s_d().size() <= 1 || path.get_d_d().size() <= 1)
+    {
+      bot_v = sqrt(pow(1 - rk[min_id]*c_d, 2)*pow(c_speed, 2) + pow(c_d_d, 2));
+    } else{
+      if(STOP_CAR)
+      {
+      cerr<< "hi" << endl;
+      bot_v = calc_bot_v (path.get_d(), path.get_s_d(), path.get_d_d());
+      } else {
+      bot_v = sqrt(pow(1 - rk[min_id]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) +
+      pow(path.get_d_d()[1], 2));
+      }
+    }
+    if(STOP_CAR)
+    {
+      cerr<< bot_v << endl;
+    }
+    cerr<<"Time 1 : "<<endTime1-startTime1<<endl;
+    cerr<<"Time 2 : "<<endTime2-startTime2<<endl;
+    cerr<<"Time 3 : "<<endTime3-startTime3<<endl;
+    geometry_msgs::Twist vel;
+    vel.linear.x = bot_v;
+    vel.linear.y = 0;
+    vel.linear.z = 0;
+    frenet_path.publish(path_msg);
+    global_path.publish(global_path_msg);
+    target_vel.publish(vel);
+    ctr++;
+    ros::spinOnce();
   }
 }
