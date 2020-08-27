@@ -8,46 +8,134 @@
 #include <ros/console.h>
 #include <vector>
 
-
+using namespace tbb;
 namespace plt = matplotlibcpp;
 
-
+int cost_count=0,footprint_count=0,odom_count=0;
 
 // accesses the costmap and updates the obstacle coordinates
 void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 {
+  cost_count++;
+  double startTime = omp_get_wtime();
+  
+  
   unsigned int height, width;
   ::cmap = *occupancy_grid;
   ob_x.clear();
   ob_y.clear();
   geometry_msgs::Pose origin = occupancy_grid->info.origin;
+  
+  double startTime1 = omp_get_wtime();
+  vector<pair<double,double>> ob1;
+  #pragma omp parallel for collapse(2)
   for (width=0; width < occupancy_grid->info.width; ++width)
   {
 	for (height=0; height < occupancy_grid->info.height; ++height)
 	{
 	  if(occupancy_grid->data[height*occupancy_grid->info.width + width] > 0)
 	  {
-		ob_x.emplace_back(width * occupancy_grid->info.resolution + occupancy_grid->info.
-		resolution / 2 + origin.position.x);
-		ob_y.emplace_back(height * occupancy_grid->info.resolution + occupancy_grid->info.resolution
+      #pragma omp critical
+      {
+        ob1.emplace_back(width * occupancy_grid->info.resolution + occupancy_grid->info.
+		resolution / 2 + origin.position.x,height * occupancy_grid->info.resolution + occupancy_grid->info.resolution
 		/ 2 + origin.position.y);
+    //     ob_x.emplace_back(width * occupancy_grid->info.resolution + occupancy_grid->info.
+		// resolution / 2 + origin.position.x);
+		// ob_y.emplace_back(height * occupancy_grid->info.resolution + occupancy_grid->info.resolution
+		// / 2 + origin.position.y);
+
+      }
+		
 	  }
 	}
   }
+
+
+  sort(ob1.begin(),ob1.end());
+  ob_x.resize(ob1.size());
+  ob_y.resize(ob1.size());
+  for(long i=0;i<ob1.size();i++){
+    ob_x[i]=ob1[i].first;
+    ob_y[i]=ob1[i].second;
+  }
+
+  double endTime1 = omp_get_wtime();
+
+  /*cerr<<"parallel X is"<<endl;
+  for(auto i :ob_x){
+    cerr<<i<<"  ";
+  }
+
+  cerr<<"paralle Y is"<<endl;
+  for(auto i :ob_y){
+    cerr<<i<<"  ";
+  }*/
+
+  /*ob_x.clear();
+  ob_y.clear();
+  double startTime2 = omp_get_wtime();
+  //geometry_msgs::Pose origin = occupancy_grid->info.origin;
+  // vector<pair<int,int>> ob;
+  // #pragma omp parallel for collapse(2)
+  for (width=0; width < occupancy_grid->info.width; ++width)
+  {
+	for (height=0; height < occupancy_grid->info.height; ++height)
+	{
+	  if(occupancy_grid->data[height*occupancy_grid->info.width + width] > 0)
+	  {
+      //#pragma omp critical
+      {
+    //     ob.emplace_back({width * occupancy_grid->info.resolution + occupancy_grid->info.
+		// resolution / 2 + origin.position.x,height * occupancy_grid->info.resolution + occupancy_grid->info.resolution
+		// / 2 + origin.position.y});
+        ob_x.emplace_back(width * occupancy_grid->info.resolution + occupancy_grid->info.
+		resolution / 2 + origin.position.x);
+		ob_y.emplace_back(height * occupancy_grid->info.resolution + occupancy_grid->info.resolution
+		/ 2 + origin.position.y);
+
+      }
+		
+	  }
+	}
+  }
+  double endTime2 = omp_get_wtime();
+
+  cerr<<"simple X is"<<endl;
+  for(auto i :ob_x){
+    cerr<<i<<"  ";
+  }
+
+  cerr<<"simple Y is"<<endl;
+  for(auto i :ob_y){
+    cerr<<i<<"  ";
+  }*/
+  //ob.resize(ob_x.)
+  
+  cerr<<"costmap paralle time = "<< endTime1 -startTime1<<endl;
+  //cerr<<"costmap parallel time = "<< endTime2 -startTime2<<endl;  
 }
 
 // accesses the robot footprint
 void footprint_callback(const geometry_msgs::PolygonStampedConstPtr& p)
 {
+  footprint_count++;
+  double startTime = omp_get_wtime();
   ::footprint = *p;
+  double endTime = omp_get_wtime();
+  //cerr<<"footprint time = "<< endTime -startTime<<endl; 
 }
 
 // accesses the odometry data
 void odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
+  odom_count++;
+  double startTime = omp_get_wtime();
   ::odom = *msg;
 //   geometry_msgs::Pose p = odom.pose.pose;
 //   trace(p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w);
+  double endTime = omp_get_wtime();
+  //cerr<<"odom time = "<< endTime -startTime<<endl; 
 }
 
 // calculates the distance between two points (x1,y1) and (x2,y2)
@@ -254,6 +342,10 @@ int main(int argc, char **argv)
   double s_dest = global_s.back();
   while(ros::ok())
   {
+    // cerr<<"costmap count "<<cost_count<<endl;
+    // cerr<<"odom count "<<odom_count<<endl;
+    // cerr<<"footprint count "<<footprint_count<<endl;
+
     int min_id = 0;
     // Specifing initial conditions for the frenet planner using odometry
     double startTime1 = omp_get_wtime();
@@ -325,7 +417,7 @@ int main(int argc, char **argv)
     } else{
       if(STOP_CAR)
       {
-      cerr<< "hi" << endl;
+      //cerr<< "hi" << endl;
       bot_v = calc_bot_v (path.get_d(), path.get_s_d(), path.get_d_d());
       } else {
       bot_v = sqrt(pow(1 - rk[min_id]*path.get_d()[1], 2)*pow(path.get_s_d()[1], 2) +
@@ -336,9 +428,9 @@ int main(int argc, char **argv)
     {
       cerr<< bot_v << endl;
     }
-    cerr<<"Time 1 : "<<endTime1-startTime1<<endl;
-    cerr<<"Time 2 : "<<endTime2-startTime2<<endl;
-    cerr<<"Time 3 : "<<endTime3-startTime3<<endl;
+    //cerr<<"Time 1 : "<<endTime1-startTime1<<endl;
+    //cerr<<"Time 2 : "<<endTime2-startTime2<<endl;
+    //cerr<<"Time 3 : "<<endTime3-startTime3<<endl;
     geometry_msgs::Twist vel;
     vel.linear.x = bot_v;
     vel.linear.y = 0;

@@ -14,6 +14,7 @@
 #include <geometry_msgs/PolygonStamped.h>
 #include <matplotlibcpp.h>
 #include <vector>
+#include "tbb/concurrent_vector.h"
 
 // Parameter
 double MAX_SPEED;  // maximum speed [m/s]

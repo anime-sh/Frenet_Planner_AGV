@@ -75,9 +75,9 @@ map_type: costmap
 
 obstacle_layer:
  enabled: true
- obstacle_range: 500
- raytrace_range: 500
- inflation_radius: 100 
+ obstacle_range: 90
+ raytrace_range: 100
+ inflation_radius: 20
  track_unknown_space: true
  combination_method: 1      
 
@@ -88,8 +88,8 @@ obstacle_layer:
 #  laser_centre: {sensor_frame: center_laser_link, data_type: PointCloud, clearing: true, marking: true, topic: /prius/center_laser/scan, inf_is_valid: true}
 
  observation_sources: laser_scan_sensor laser1_scan_sensor
- laser_scan_sensor: {sensor_frame: front_right_laser_link, data_type: LaserScan, topic: /prius/front_right_laser/scan , marking: true, clearing: true}
- laser1_scan_sensor: {sensor_frame: front_left_laser_link, data_type: LaserScan, topic: /prius/front_left_laser/scan , marking: true, clearing: true}
+ laser_scan_sensor: {sensor_frame: front_right_laser_link, data_type: LaserScan, topic: scan_filtered_right , marking: true, clearing: true}
+ laser1_scan_sensor: {sensor_frame: front_left_laser_link, data_type: LaserScan, topic: scan_filtered_left , marking: true, clearing: true}
  
 inflation_layer:
   enabled:              true

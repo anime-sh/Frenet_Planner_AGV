@@ -6,7 +6,22 @@
 
 	<node pkg = "frenet_planner" type = "frenet_planner" name = "frenet_planner" output = "screen" >
 		<rosparam file = "$(find frenet_planner)/cfg/frenet_planner.yaml" command = "load" />
-	</node>
+  </node>
+  
+  
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_right">
+        <remap from="scan" to="prius/front_right_laser/scan" />
+        <remap from="scan_filtered" to="scan_filtered_right" />
+        
+        <rosparam file = "$(find frenet_planner)/cfg/laser_filter.yaml" command = "load" />
+  </node>
+
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_left">
+    <remap from="scan" to="/prius/front_left_laser/scan" />
+    <remap from="scan_filtered" to="/scan_filtered_left" />
+    <rosparam file = "$(find frenet_planner)/cfg/laser_filter.yaml" command = "load" />
+</node>
+    
 
 	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
     <remap from="odom" to="base_pose_ground_truth" />

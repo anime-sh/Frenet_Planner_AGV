@@ -398,13 +398,20 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
 {
   trace("start");
+  double startTime1 = omp_get_wtime();
   vector<FrenetPath> fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0, lp);
+  double endTime1 = omp_get_wtime();
   trace("calc_global_paths");
+  double startTime2 = omp_get_wtime();
   fplist = calc_global_paths(fplist, csp);
+  double endTime2 = omp_get_wtime();
   trace("check_path");
+  
 
   // for now maximum possilble paths are taken into list
+  double startTime3 = omp_get_wtime();
   fplist = check_path(fplist, bot_yaw, 0.523599, 2.0);
+  double endTime3 = omp_get_wtime();
   trace("done checking ");
   // For displaying all paths
   if(false)
