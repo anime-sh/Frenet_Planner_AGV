@@ -8,7 +8,7 @@
 #include <ros/console.h>
 #include <vector>
 
-using namespace tbb;
+//using namespace tbb;
 namespace plt = matplotlibcpp;
 
 int cost_count=0,footprint_count=0,odom_count=0;
@@ -17,7 +17,7 @@ int cost_count=0,footprint_count=0,odom_count=0;
 void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
 {
   cost_count++;
-  double startTime = omp_get_wtime();
+  //double startTime = omp_get_wtime();
   
   
   unsigned int height, width;
@@ -72,7 +72,7 @@ void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
     cerr<<i<<"  ";
   }*/
 
-  /*ob_x.clear();
+  ob_x.clear();
   ob_y.clear();
   double startTime2 = omp_get_wtime();
   //geometry_msgs::Pose origin = occupancy_grid->info.origin;
@@ -101,7 +101,7 @@ void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
   }
   double endTime2 = omp_get_wtime();
 
-  cerr<<"simple X is"<<endl;
+  /*cerr<<"simple X is"<<endl;
   for(auto i :ob_x){
     cerr<<i<<"  ";
   }
@@ -112,8 +112,8 @@ void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
   }*/
   //ob.resize(ob_x.)
   
-  cerr<<"costmap paralle time = "<< endTime1 -startTime1<<endl;
-  //cerr<<"costmap parallel time = "<< endTime2 -startTime2<<endl;  
+  cerr<<"costmap parallel time = "<< endTime1 -startTime1<<endl;
+  cerr<<"costmap simple time = "<< endTime2 -startTime2<<endl;  
 }
 
 // accesses the robot footprint
@@ -428,8 +428,8 @@ int main(int argc, char **argv)
     {
       cerr<< bot_v << endl;
     }
-    //cerr<<"Time 1 : "<<endTime1-startTime1<<endl;
-    //cerr<<"Time 2 : "<<endTime2-startTime2<<endl;
+    // cerr<<"Time 1 : "<<endTime1-startTime1<<endl;
+    // cerr<<"Time 2 : "<<endTime2-startTime2<<endl;
     //cerr<<"Time 3 : "<<endTime3-startTime3<<endl;
     geometry_msgs::Twist vel;
     vel.linear.x = bot_v;
