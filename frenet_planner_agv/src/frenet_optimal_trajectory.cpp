@@ -140,7 +140,7 @@ double s0, FrenetPath lp)
   upper_limit_d = MAX_ROAD_WIDTH + D_ROAD_W;
   get_limits_d(lp, &lower_limit_d, &upper_limit_d);  // IF not required to sample around previous
                                                      // sampled d(th) then comment this line. 
-  /*if(STOP_CAR)
+  if(STOP_CAR)
   {
     #pragma omp parallel for collapse(2)
    for(int Di = int(lower_limit_d/ D_ROAD_W); Di <= int(upper_limit_d/ D_ROAD_W); Di += 1)  // sampling for lateral
@@ -196,8 +196,8 @@ double s0, FrenetPath lp)
       }
     }
 
-  }*/
-  
+  }
+  /*
   for(double di = lower_limit_d; di <= upper_limit_d; di += D_ROAD_W)  // sampling for lateral
                                                                        // offset
   {
@@ -237,7 +237,7 @@ double s0, FrenetPath lp)
       }
     }
   }
-  
+  */
   return frenet_paths;
 }
 
