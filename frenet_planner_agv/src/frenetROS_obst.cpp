@@ -112,8 +112,8 @@ void costmap_callback(const nav_msgs::OccupancyGrid::ConstPtr& occupancy_grid)
   }*/
   //ob.resize(ob_x.)
   
-  cerr<<"costmap parallel time = "<< endTime1 -startTime1<<endl;
-  cerr<<"costmap simple time = "<< endTime2 -startTime2<<endl;  
+  // cerr<<"costmap parallel time = "<< endTime1 -startTime1<<endl;
+  // cerr<<"costmap simple time = "<< endTime2 -startTime2<<endl;  
 }
 
 // accesses the robot footprint
@@ -339,7 +339,8 @@ int main(int argc, char **argv)
 	global_s[i] = s;
   }
   int TATATA = 1;
-  double s_dest = global_s.back();
+  s_dest = global_s.back();
+  bool run_frenet = true;
   while(ros::ok())
   {
     // cerr<<"costmap count "<<cost_count<<endl;
@@ -358,23 +359,38 @@ int main(int argc, char **argv)
     }
     double endTime1 = omp_get_wtime();
     trace("frenet optimal planning", s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
-    if (abs(s_dest-s0) <= 50)
+    if (abs(203.5-s0) <= 15)
     {
       STOP_CAR = true;
       TARGET_SPEED = 0;
-      KD_V = 2;
-      KT = 0.1;
-    } else{
+      //KD_V = 2;
+      //KT = 0.1;
+      cerr<<"STOP\n";
+    } /*else{
       STOP_CAR = false;
-    }
+    }*/
     if(abs(s0-s_dest) <= 5)  
     {
-      c_speed /= 2;
+      //c_speed /= 2;
     }
     // Getting the optimal frenet path
+    /*if(run_frenet){
+      double startTime2 = omp_get_wtime();
+    path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
+    double endTime2 = omp_get_wtime();
+    }*/
     double startTime2 = omp_get_wtime();
     path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
     double endTime2 = omp_get_wtime();
+    if(false){
+      cerr<<endl<<" s_d"<<endl;
+      for(auto i : path.get_s_d())
+        cerr<<i<<"  ";
+      cerr<<endl<<" d_d"<<endl;
+      for(auto i : path.get_d_d())
+        cerr<<i<<"  ";
+      //run_frenet=false;
+    }
     lp = path;
     nav_msgs::Path path_msg;
     nav_msgs::Path global_path_msg;
@@ -439,6 +455,10 @@ int main(int argc, char **argv)
     global_path.publish(global_path_msg);
     target_vel.publish(vel);
     ctr++;
+    // if(!run_frenet){
+    //   cerr<<"ending frenet"<<endl;
+    //   break;
+    // }
     ros::spinOnce();
   }
 }

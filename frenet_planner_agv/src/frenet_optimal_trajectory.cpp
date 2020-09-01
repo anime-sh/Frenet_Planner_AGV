@@ -91,7 +91,62 @@ void FrenetPath::calc_lon_paths(double c_speed, double s0, double Ti, double tv)
 void FrenetPath::calc_lon_paths_quintic_poly(double c_speed, double s0, double Ti, double ts,
 double tv)
 {
-  quintic lon_qp(s0, c_speed, 0.0, s0 + ts, tv, 0.0, Ti);  // s_dd is not being sampled
+  /*if(abs(s_dest-s0) <= 16)
+  {
+    quintic lon_qp(s0, c_speed, 0.0, min(a1,a2);, tv, 0.0, Ti);  // s_dd is not being sampled
+    int size = t.size();
+    s.resize(size);
+    s_d.resize(size);
+    s_dd.resize(size);
+    s_ddd.resize(size);
+    int i = 0;
+    for(auto te : t)
+    {
+      s[i] = (lon_qp.calc_point(te));
+      s_d[i] = (lon_qp.calc_first_derivative(te));
+      s_dd[i] = (lon_qp.calc_second_derivative(te));
+      s_ddd[i] = (lon_qp.calc_third_derivative(te));
+      ++i;
+    }
+    // https://www.geeksforgeeks.org/std-inner_product-in-cpp/
+    Js = inner_product(s_ddd.begin(), s_ddd.end(), s_ddd.begin(), 0);
+
+    double ds = pow((TARGET_SPEED - s_d.back()), 2);
+    /*if(STOP_CAR && s_d.size() >= 2)
+      ds = s_d[1]*s_d[1];
+    // calculation of lateral, longitudnal and overall cost of the trajectories
+    cd = (KJ*Jp + KT*Ti + KD*d.back()*d.back());
+    cv = (KJ*Js + KT*Ti + KD_V*ds);
+    cf = (KLAT*cd + KLON*cv);
+  } else {
+    quintic lon_qp(s0, c_speed, 0.0, s0 +15, tv, 0.0, Ti);  // s_dd is not being sampled
+    int size = t.size();
+    s.resize(size);
+    s_d.resize(size);
+    s_dd.resize(size);
+    s_ddd.resize(size);
+    int i = 0;
+    for(auto te : t)
+    {
+      s[i] = (lon_qp.calc_point(te));
+      s_d[i] = (lon_qp.calc_first_derivative(te));
+      s_dd[i] = (lon_qp.calc_second_derivative(te));
+      s_ddd[i] = (lon_qp.calc_third_derivative(te));
+      ++i;
+    }
+    // https://www.geeksforgeeks.org/std-inner_product-in-cpp/
+    Js = inner_product(s_ddd.begin(), s_ddd.end(), s_ddd.begin(), 0);
+
+    double ds = pow((TARGET_SPEED - s_d.back()), 2);
+    /*if(STOP_CAR && s_d.size() >= 2)
+      ds = s_d[1]*s_d[1];
+    // calculation of lateral, longitudnal and overall cost of the trajectories
+    cd = (KJ*Jp + KT*Ti + KD*d.back()*d.back());
+    cv = (KJ*Js + KT*Ti + KD_V*ds);
+    cf = (KLAT*cd + KLON*cv);
+
+  }*/
+  quintic lon_qp(s0, c_speed, 0.0, min(s0+15,203.5), tv, 0.0, Ti);  // s_dd is not being sampled
   int size = t.size();
   s.resize(size);
   s_d.resize(size);
@@ -106,6 +161,29 @@ double tv)
     s_ddd[i] = (lon_qp.calc_third_derivative(te));
     ++i;
   }
+  if(STOP_CAR){
+    for(int i=0;i<s.size();i++)
+    {
+        if(s[i]>203.5)
+          {
+            s.resize(i);
+            s_d.resize(i);
+            s_dd.resize(i);
+            s_ddd.resize(i);
+            t.resize(i);
+            d.resize(i);
+            d_d.resize(i);
+            d_dd.resize(i);
+            d_ddd.resize(i);
+            vecD d_ddd_vec = d_ddd;
+            Jp = ( inner_product(d_ddd_vec.begin(), d_ddd_vec.end(), d_ddd_vec.begin(), 0));
+            break;
+          }
+    }
+
+  }
+  
+
   // https://www.geeksforgeeks.org/std-inner_product-in-cpp/
   Js = inner_product(s_ddd.begin(), s_ddd.end(), s_ddd.begin(), 0);
 
@@ -245,25 +323,51 @@ void FrenetPath::adding_global_path(Spline2D csp)
 {
   double startTime1 = omp_get_wtime();
   int n = s.size();
+  //cerr<<"n is "<<n<<endl;
+  /*if(STOP_CAR)
+  {
+    cerr<<"s_dest ="<<s_dest<<" size is "<<n<<" is"<<endl;
+    for(auto i : s)
+      cerr<<i<<" ";
+    cerr<<endl;
+  }*/
   x.resize(n);
   y.resize(n);
   for(unsigned int i = 0; i < n; i++)
   {
     double ix, iy;
     // trace(i);
+    if(STOP_CAR){
+      //cerr<<"310"<<endl;
+    }
+    
     csp.calc_position(ix, iy, s[i]);
     // trace("done calc_position");
+    if(STOP_CAR){
+      //cerr<<"316 "<<ix<<" "<<iy<<endl;
+    }
     if(ix == NONE)
     {
+      // if(STOP_CAR)
+      //   cerr<<"hii"<<endl;
       return;
       //break;
     }
+    if(STOP_CAR){
+      //cerr<<"324"<<endl;
+    }
     double iyaw = csp.calc_yaw(s[i]);
+    if(STOP_CAR){
+      //cerr<<"328 "<<iyaw<<endl;
+    }
     //double di = d[i];
     double fx = ix - d[i]*sin(iyaw);
     double fy = iy + d[i]*cos(iyaw);
     x[i] = (fx);
     y[i] = (fy);
+  }
+  if(STOP_CAR){
+    cerr<<"\n\nHOlaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\n";
   }
   yaw.resize(n-1);
   ds.resize(n-1);
@@ -272,17 +376,31 @@ void FrenetPath::adding_global_path(Spline2D csp)
   {
     double dx = x[i + 1] - x[i];
     double dy = y[i + 1] - y[i];
-    yaw[i] = (atan2(dy, dx));
+    if(abs(dx)>0.0001){
+        yaw[i] = (atan2(dy, dx));
+    }
+    else{
+      yaw[i]=0;
+    }
+    
     ds[i] = (sqrt(dx*dx + dy*dy));
   }
   // TO remove paths whose predicted s goes out of bounds of global path.
   if(s.size() == x.size())
   {
+    //if(STOP_CAR)
+      //cerr<<"hii"<<endl;
     return;
   }
   c.resize((n-1) - 1);
   for(unsigned int i = 0; i < (n-1) - 1; i++){
-    c[i]=((yaw[i + 1] - yaw[i]) / ds[i]);
+    if(ds[i]!=0)
+     c[i]=((yaw[i + 1] - yaw[i]) / ds[i]);
+    else
+    {
+      c[i]=0;
+    }
+    
   }
 
   double endTime1 = omp_get_wtime();
@@ -532,12 +650,53 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
   double startTime1 = omp_get_wtime();
   vector<FrenetPath> fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0, lp);
   double endTime1 = omp_get_wtime();
-  cerr<<"sixe: "<<fplist.size()<<endl;
+  
+  
+  
+  //cerr<<"sixe: "<<fplist.size()<<endl;
   trace("calc_global_paths");
   double startTime2 = omp_get_wtime();
   fplist = calc_global_paths(fplist, csp);
   double endTime2 = omp_get_wtime();
   trace("check_path");
+  if(STOP_CAR){
+
+    double min_cost = FLT_MAX;
+    double cf;
+    FrenetPath bestpath;
+    for(auto & fp : fplist)
+    {
+      cf = fp.get_cf();
+      if(min_cost >= cf)
+      {
+        min_cost = cf;
+        bestpath = fp;
+      }
+    }
+  //   cerr<<endl<<bestpath.get_d_d().size()<<endl;
+  // cerr<<bestpath.get_s_d().size()<<endl;
+      cerr<<endl<<" d size="<<bestpath.get_d().size()<<endl;
+      for(auto i : bestpath.get_d())
+        cerr<<i<<"  ";
+      cerr<<endl<<" s size="<<bestpath.get_s().size()<<endl;
+      for(auto i : bestpath.get_s())
+        cerr<<i<<"  ";
+      cerr<<endl<<" x size="<<bestpath.get_x().size()<<endl;
+      for(auto i : bestpath.get_x())
+        cerr<<i<<"  ";
+      cerr<<endl<<" y"<<endl;
+      for(auto i : bestpath.get_y())
+        cerr<<i<<"  ";
+      cerr<<endl<<" yaw"<<endl;
+      for(auto i : bestpath.get_yaw())
+        cerr<<i<<"  ";
+      cerr<<endl<<" ds"<<endl;
+      for(auto i : bestpath.get_ds())
+        cerr<<i<<"  ";
+      cerr<<endl<<" c"<<endl;
+      for(auto i : bestpath.get_c())
+        cerr<<i<<"  ";
+  }
   
   transform_count = 0;
   // for now maximum possilble paths are taken into list
@@ -547,9 +706,9 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
   //cerr<<"transform_count "<<transform_count<<endl;
   trace("done checking ");
   
-  cerr<<"Time 1:"<<endTime1-startTime1<<endl;
-  cerr<<"Time 2:"<<endTime2-startTime2<<endl;
-  cerr<<"Time 3:"<<endTime3-startTime3<<endl;
+  // cerr<<"Time 1:"<<endTime1-startTime1<<endl;
+  // cerr<<"Time 2:"<<endTime2-startTime2<<endl;
+  // cerr<<"Time 3:"<<endTime3-startTime3<<endl;
   // For displaying all paths
   if(false)
   {
@@ -568,7 +727,8 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
       bestpath = fp;
     }
   }
-  
+  // cerr<<bestpath.get_d_d().size()<<endl;
+  // cerr<<bestpath.get_s_d().size()<<endl;
   // For showing the bestpath
   if(false)
   {
@@ -577,7 +737,7 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
     bestpath.plot_path();
   }
   // For plotting velocity profile (x,y) = (t,s_d)
-  if(false)
+  if(true)
   {
     plt::ion();
     plt::show();
