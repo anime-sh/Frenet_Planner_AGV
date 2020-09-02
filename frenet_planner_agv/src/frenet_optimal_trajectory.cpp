@@ -224,7 +224,7 @@ double s0, FrenetPath lp)
    for(int Di = int(lower_limit_d/ D_ROAD_W); Di <= int(upper_limit_d/ D_ROAD_W); Di += 1)  // sampling for lateral
                                                                           // offset
     {
-      for(int Ti = int(MINT/DT); Ti <= int((MAXT + DT)/DT); Ti += 1)  // Sampling for prediction time
+      for(int Ti = 0 ; Ti <= int((MAXT + DT)/DT); Ti += 1)  // Sampling for prediction time
       {
         double di = double(Di)/D_ROAD_W;
         double ti = double(Ti)/D_T_S;
@@ -365,9 +365,6 @@ void FrenetPath::adding_global_path(Spline2D csp)
     double fy = iy + d[i]*cos(iyaw);
     x[i] = (fx);
     y[i] = (fy);
-  }
-  if(STOP_CAR){
-    cerr<<"\n\nHOlaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\n";
   }
   yaw.resize(n-1);
   ds.resize(n-1);
@@ -659,7 +656,7 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
   fplist = calc_global_paths(fplist, csp);
   double endTime2 = omp_get_wtime();
   trace("check_path");
-  if(STOP_CAR){
+  /*if(STOP_CAR){
 
     double min_cost = FLT_MAX;
     double cf;
@@ -675,7 +672,7 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
     }
   //   cerr<<endl<<bestpath.get_d_d().size()<<endl;
   // cerr<<bestpath.get_s_d().size()<<endl;
-      cerr<<endl<<" d size="<<bestpath.get_d().size()<<endl;
+      /*cerr<<endl<<" d size="<<bestpath.get_d().size()<<endl;
       for(auto i : bestpath.get_d())
         cerr<<i<<"  ";
       cerr<<endl<<" s size="<<bestpath.get_s().size()<<endl;
@@ -696,7 +693,7 @@ double c_d_d, double c_d_dd, FrenetPath lp, double bot_yaw)
       cerr<<endl<<" c"<<endl;
       for(auto i : bestpath.get_c())
         cerr<<i<<"  ";
-  }
+  }*/
   
   transform_count = 0;
   // for now maximum possilble paths are taken into list

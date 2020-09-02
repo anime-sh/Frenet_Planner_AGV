@@ -220,9 +220,10 @@ vecD Spline2D::calc_s(vecD x, vecD y)  // approximately calculates s along the s
 
   vecD t;
   t.push_back(0);
-
-  for(unsigned int i = 0; i < ds.size(); i++)
+  t.push_back(ds[0]);
+  for(unsigned int i = 1; i < ds.size(); i++)
   {
+    cerr<<t.back()+ds[i]<<endl;
     t.push_back(t.back() + ds[i]);
   }
 
@@ -283,6 +284,7 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
   vecD s;
   double sRange = sp.get_s_last();
   double sInc = 0;
+  cerr<<"Sincccccccccc\n"<<sRange<<endl;
   while(1)
   {
     if(sInc >= sRange)
@@ -290,6 +292,7 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
       break;
     }
     s.push_back(sInc);
+    //cerr<<sInc<<endl;
     sInc = sInc + ds;
   }
   // for(i =0 ; i*ds<sRange;i++)  i*ds = sInc
@@ -309,6 +312,10 @@ Spline2D calc_spline_course(vecD x, vecD y, vecD &rx, vecD &ry, vecD &ryaw, vecD
   }
   return sp;
 }
+inline double calc_dis(double x1, double y1, double x2, double y2)
+{
+  return sqrt(pow((x1 - x2), 2) + pow((y1 - y2), 2));
+}
 
 int main(){
   vector<double> W_X = {38, 38, 38, 38, 38, 38, 38 , 38.21, 39.25, 42.56, 48.97, 61} ;
@@ -316,13 +323,61 @@ vector<double> W_Y = {-57, -45, -32.0, -18.5, -12.0, 0.0, 12, 35, 42.89, 80.41, 
 vecD rx, ry, ryaw, rk;
 double ds1 = 0.1; 
 Spline2D csp = calc_spline_course(W_X, W_Y, rx, ry, ryaw, rk, ds1);
+  
+  vector<double> global_s(rx.size());
+  double s2 = 0;
+  global_s[0] = 0;
+  for(unsigned int i = 1; i < rx.size(); i++)
+  {
+	double dis = calc_dis(rx[i], ry[i], rx[i - 1], ry[i - 1]);
+	s2 = s2 + dis;
+	global_s[i] = s2;
+  }
+  
+  vecD s1;
+  double sRange = csp.get_s_last();
+  double sInc = 0;
+  while(1)
+  {
+    if(sInc >= sRange)
+    {
+      break;
+    }
+    s1.push_back(sInc);
+    sInc = sInc + ds1;
+  }
+  
+  
+  /*double sRange = csp.get_s_last();
+  double sInc = 0;
+  vector<double> s2;
+  //double ds1 = 0.1;
+  while(1)
+  {
+    if(sInc >= sRange)
+    {
+      break;
+    }
+    s2.push_back(sInc);
+    sInc = sInc + ds1;
+  }*/
+  cerr<<"hiiiiiiiiii\n";
+  cerr<<endl<<s1.back()<<"  "<<s1.size();
+  cerr<<endl<<global_s.back()<<"  "<<global_s.size();
+
+
+
+
+
+
+
  vecD x, y, yaw, ds, c;
 
  vecD d={-0.523238,  -0.525306,  -0.526709,  -0.526887,  -0.525388,  -0.521859,  -0.516044,  -0.507773,  -0.496957,  -0.483583,  -0.467704,  -0.449434,  -0.428941,  -0.406441,  -0.382191,  -0.356481,  -0.329629,  -0.301975,  -0.27387,  -0.245674,  -0.217749,  -0.190448,  -0.164112,  -0.139064,  -0.115599,  -0.0939799,  -0.0744295,  -0.0571245,  -0.0421886,  -0.0296855,  -0.0196126,  -0.0118942,  -0.00637459,  -0.0028115,  -0.000869461,  -0.000113007 };
  
  vecD s={189.343,  190.646,  191.933,  193.19,  194.406,  195.57,  196.674,  197.712,  198.679,  199.57,  200.383,  201.118,  201.774,  202.353,  202.856,  203.287,  203.65,  203.947,  204.186,  204.37, 204.505,  204.597,  204.652,  204.676,  204.676,  204.656,  204.622,  204.58,  204.534,  204.488,  204.445,  204.409,  204.38,  204.36,  204.349,  204.344  };
 
-int n = s.size();
+/*int n = s.size();
   //cerr<<"n is "<<n<<endl;
   /*if(STOP_CAR)
   {
@@ -330,7 +385,7 @@ int n = s.size();
     for(auto i : s)
       cerr<<i<<" ";
     cerr<<endl;
-  }*/
+  }
   x.resize(n);
   y.resize(n);
   for(unsigned int i = 0; i < n; i++)
@@ -407,7 +462,8 @@ int n = s.size();
         cerr<<i<<"  ";
       cerr<<endl<<" c"<<endl;
       for(auto i : c)
-        cerr<<i<<"  ";
+        cerr<<i<<"  ";*/
 
+  
   return 0;
 }

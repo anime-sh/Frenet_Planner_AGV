@@ -338,8 +338,20 @@ int main(int argc, char **argv)
 	s = s + dis;
 	global_s[i] = s;
   }
-  int TATATA = 1;
+  /*double sRange = csp.get_s_last();
+  double sInc = 0;
+  while(1)
+  {
+    if(sInc >= sRange)
+    {
+      break;
+    }
+    global_s.push_back(sInc);
+    sInc = sInc + ds;
+  }*/
+  //int TATATA = 1;
   s_dest = global_s.back();
+  //cerr<<s_dest;
   bool run_frenet = true;
   while(ros::ok())
   {
@@ -366,6 +378,7 @@ int main(int argc, char **argv)
       //KD_V = 2;
       //KT = 0.1;
       cerr<<"STOP\n";
+      cerr<<s_dest<<endl;
     } /*else{
       STOP_CAR = false;
     }*/
