@@ -7,7 +7,7 @@
 #include <utility>
 #include <ros/console.h>
 #include <vector>
-
+#include<fstream>
 //using namespace tbb;
 namespace plt = matplotlibcpp;
 
@@ -316,7 +316,8 @@ int main(int argc, char **argv)
 	double pltbasetime = omp_get_wtime();
 	while (ros::ok())
 	{
-
+		ofstream fout;
+		fout.open("/home/animesh/try_ws/src/frenet_planner_agv/src/log.txt",ios::app);
 		int min_id = 0;
 		// Specifing initial conditions for the frenet planner using odometry
 		double startTime1 = omp_get_wtime();
@@ -335,6 +336,11 @@ int main(int argc, char **argv)
 		plttime.push_back(abs(endTime1-pltbasetime));
 		plt::plot(plttime,pltcspeed);
 		plt::pause(0.001);
+		fout<<"a run"<<endl;
+		fout<<plts0<<endl;
+		fout<<plttime<<endl;
+		fout<<pltcspeed<<endl;
+		fout<<"end"<<endl;
 		trace("frenet optimal planning", s0, c_speed, c_d, c_d_d, c_d_dd, lp, bot_yaw);
 		if (abs(203.5 - s0) <= 15) // convert 203.5 to a variable in terms of s_dest
 		{
@@ -447,6 +453,7 @@ int main(int argc, char **argv)
 		//   cerr<<"ending frenet"<<endl;
 		//   break;
 		// }
+		fout.close();
 		ros::spinOnce();
 	}
 }
