@@ -8,7 +8,7 @@ Here is a brief summary of the changes and improvements made in the planner:
 * Reduced the time spent on generating a path (by 5-6 times) through parallel processing and other optimisations
 * Fixed the issue of ghost obstacles caused due to faulty lidar data processing by car_demo
 
-
+A short [video](https://youtu.be/BPBGQtXIR2Q) of a demo run 
 # Frenet Planner ROS (Readme of the original repo)
 
 ## Introduction
