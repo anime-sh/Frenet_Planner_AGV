@@ -1,6 +1,6 @@
 cost:
   kj: 0.01
-  kt: 1.0
+  kt: 5
   kd: 0.5
   kd_v: 0.5
   klat: 1.0
@@ -9,11 +9,11 @@ cost:
 path:
   max_speed: 13.89
   max_accel: 5.0
-  max_curvature: 1.0
+  max_curvature: 2.0
   max_road_width: 10.0
   d_road_w: 1.0
   dt: 0.2
-  maxt: 5.0
+  maxt: 6.0
   mint: 2.0
   target_speed: 8.33
   d_t_s: 1.389
