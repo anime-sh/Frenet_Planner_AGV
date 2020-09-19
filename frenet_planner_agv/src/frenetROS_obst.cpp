@@ -157,6 +157,7 @@ void find_nearest_in_global_path(vecD &global_x, vecD &global_y, double &min_x, 
 	}
 }
 
+
 inline double get_bot_yaw()
 {
 	geometry_msgs::Pose p = odom.pose.pose;
@@ -167,6 +168,7 @@ inline double get_bot_yaw()
 	trace(yaw, pitch, roll); // is -nan
 	return yaw;
 }
+
 
 void initial_conditions_path(Spline2D &csp, double &s0, double &c_speed, double &c_d, double &c_d_d,
 							 double &c_d_dd, double &bot_yaw, FrenetPath &path)
@@ -184,6 +186,7 @@ void initial_conditions_path(Spline2D &csp, double &s0, double &c_speed, double 
 	c_d_dd = 0;
 	bot_yaw = get_bot_yaw();
 }
+
 
 int initial_conditions_new(Spline2D &csp, vecD &global_s, vecD &global_x, vecD &global_y,
 						   vecD &global_R, vecD &global_yaw, double &s0, double &c_speed, double &c_d, double &c_d_d,
@@ -209,10 +212,12 @@ int initial_conditions_new(Spline2D &csp, vecD &global_s, vecD &global_x, vecD &
 		c_d *= -1;
 	s0 = global_s[min_id];
 	bot_yaw = get_bot_yaw();
+
 	double g_path_yaw = global_yaw[min_id];
 	trace(bot_yaw, g_path_yaw);
 	double delta_theta = bot_yaw - g_path_yaw;
 	trace(delta_theta);
+
 	c_d_d = v * sin(delta_theta); // Equation 5
 	double k_r = global_R[min_id];
 	c_speed = v * cos(delta_theta) / (1 - k_r * c_d); // s_dot (Equation 7)
@@ -323,6 +328,7 @@ int main(int argc, char **argv)
 		double startTime1 = omp_get_wtime();
 		if (true)
 		{
+
 			min_id = initial_conditions_new(csp, global_s, rx, ry, rk, ryaw, s0, c_speed, c_d, c_d_d,
 											c_d_dd, bot_yaw, path);
 		}

@@ -398,6 +398,7 @@ inline bool sortByCost(FrenetPath a, FrenetPath b)
 	}
 }
 
+
 // check for specified velocity, acceleration, curvature constraints and collisions
 vector<FrenetPath> check_path(vector<FrenetPath> &fplist, double bot_yaw, double yaw_error,
 							  double obst_r)
@@ -418,6 +419,7 @@ vector<FrenetPath> check_path(vector<FrenetPath> &fplist, double bot_yaw, double
 		}
 		if (flag == 1)
 		{
+
 			continue;
 		}
 		else if (fp.check_collision(obst_r) == 0)
@@ -426,7 +428,7 @@ vector<FrenetPath> check_path(vector<FrenetPath> &fplist, double bot_yaw, double
 			fplist_final.push_back(fplist[i]);
 		}
 	}
-	return fplist_final;
+	//return fplist_final;
 }
 
 void FrenetPath::plot_path()
@@ -468,6 +470,7 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 	double endTime1 = omp_get_wtime();
 
 	trace("calc_global_paths");
+
 	double startTime2 = omp_get_wtime();
 	fplist = calc_global_paths(fplist, csp);
 	double endTime2 = omp_get_wtime();
@@ -482,6 +485,7 @@ FrenetPath frenet_optimal_planning(Spline2D csp, double s0, double c_speed, doub
 	{
 		display_paths(fplist);
 	}
+
 
 	double min_cost = FLT_MAX;
 	double cf;
