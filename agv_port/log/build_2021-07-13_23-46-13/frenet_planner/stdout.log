@@ -1,0 +1,31 @@
+running egg_info
+creating ../../build/frenet_planner/frenet_planner.egg-info
+writing ../../build/frenet_planner/frenet_planner.egg-info/PKG-INFO
+writing dependency_links to ../../build/frenet_planner/frenet_planner.egg-info/dependency_links.txt
+writing entry points to ../../build/frenet_planner/frenet_planner.egg-info/entry_points.txt
+writing requirements to ../../build/frenet_planner/frenet_planner.egg-info/requires.txt
+writing top-level names to ../../build/frenet_planner/frenet_planner.egg-info/top_level.txt
+writing manifest file '../../build/frenet_planner/frenet_planner.egg-info/SOURCES.txt'
+reading manifest file '../../build/frenet_planner/frenet_planner.egg-info/SOURCES.txt'
+writing manifest file '../../build/frenet_planner/frenet_planner.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/tfjuror/agv_port/build/frenet_planner/build
+creating /home/tfjuror/agv_port/build/frenet_planner/build/lib
+creating /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner
+copying frenet_planner/__init__.py -> /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner
+running install
+running install_lib
+creating /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner
+copying /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner/__init__.py -> /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner
+byte-compiling /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner/__init__.py to __init__.cpython-38.pyc
+running install_data
+creating /home/tfjuror/agv_port/install/frenet_planner/share/ament_index
+creating /home/tfjuror/agv_port/install/frenet_planner/share/ament_index/resource_index
+creating /home/tfjuror/agv_port/install/frenet_planner/share/ament_index/resource_index/packages
+copying resource/frenet_planner -> /home/tfjuror/agv_port/install/frenet_planner/share/ament_index/resource_index/packages
+copying package.xml -> /home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner
+running install_egg_info
+Copying ../../build/frenet_planner/frenet_planner.egg-info to /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner-0.0.0-py3.8.egg-info
+running install_scripts
+writing list of installed files to '/home/tfjuror/agv_port/build/frenet_planner/install.log'

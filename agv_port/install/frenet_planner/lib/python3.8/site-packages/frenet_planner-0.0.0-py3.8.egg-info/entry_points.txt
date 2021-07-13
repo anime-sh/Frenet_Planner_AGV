@@ -1,0 +1,3 @@
+[console_scripts]
+planner = frenet_planner.frenet_optimal_trajectory:main
+
