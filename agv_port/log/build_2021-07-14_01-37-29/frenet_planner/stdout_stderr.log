@@ -1,0 +1,29 @@
+running egg_info
+writing ../../build/frenet_planner/frenet_planner.egg-info/PKG-INFO
+writing dependency_links to ../../build/frenet_planner/frenet_planner.egg-info/dependency_links.txt
+writing entry points to ../../build/frenet_planner/frenet_planner.egg-info/entry_points.txt
+writing requirements to ../../build/frenet_planner/frenet_planner.egg-info/requires.txt
+writing top-level names to ../../build/frenet_planner/frenet_planner.egg-info/top_level.txt
+reading manifest file '../../build/frenet_planner/frenet_planner.egg-info/SOURCES.txt'
+writing manifest file '../../build/frenet_planner/frenet_planner.egg-info/SOURCES.txt'
+running build
+running build_py
+copying frenet_planner/cubic_spline_planner.py -> /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner
+copying frenet_planner/frenet_optimal_trajectory.py -> /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner
+copying frenet_planner/quintic_polynomials_planner.py -> /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner
+running install
+running install_lib
+copying /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner/cubic_spline_planner.py -> /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner
+copying /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner/frenet_optimal_trajectory.py -> /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner
+copying /home/tfjuror/agv_port/build/frenet_planner/build/lib/frenet_planner/quintic_polynomials_planner.py -> /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner
+byte-compiling /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner/cubic_spline_planner.py to cubic_spline_planner.cpython-38.pyc
+byte-compiling /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner/frenet_optimal_trajectory.py to frenet_optimal_trajectory.cpython-38.pyc
+byte-compiling /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner/quintic_polynomials_planner.py to quintic_polynomials_planner.cpython-38.pyc
+running install_data
+copying package.xml -> /home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner
+running install_egg_info
+removing '/home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner-0.0.0-py3.8.egg-info' (and everything under it)
+Copying ../../build/frenet_planner/frenet_planner.egg-info to /home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages/frenet_planner-0.0.0-py3.8.egg-info
+running install_scripts
+Installing planner script to /home/tfjuror/agv_port/install/frenet_planner/lib/frenet_planner
+writing list of installed files to '/home/tfjuror/agv_port/build/frenet_planner/install.log'

@@ -1,0 +1,123 @@
+[0.746s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.746s] DEBUG:colcon:Parsed command line arguments: Namespace(ament_cmake_args=None, base_paths=['.'], build_base='build', catkin_cmake_args=None, catkin_skip_building_tests=False, cmake_args=None, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, cmake_target=None, cmake_target_skip_unavailable=False, continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f2e59e75fd0>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=None, packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=8, paths=None, symlink_install=False, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f2e59e75fd0>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f2e59e7d490>)
+[0.759s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.759s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.759s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.759s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.759s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.760s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.760s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/tfjuror/agv_port'
+[0.760s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.760s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.761s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.792s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.793s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.793s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.793s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.793s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.793s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.794s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.794s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.794s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.794s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.794s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.795s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.795s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.795s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.795s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.796s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.797s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.797s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.797s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.797s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.797s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.797s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.798s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extensions ['ignore', 'ignore_ament_install']
+[0.798s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extension 'ignore'
+[0.798s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extension 'ignore_ament_install'
+[0.798s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extensions ['colcon_pkg']
+[0.798s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extension 'colcon_pkg'
+[0.799s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extensions ['colcon_meta']
+[0.799s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extension 'colcon_meta'
+[0.799s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extensions ['ros']
+[0.799s] Level 1:colcon.colcon_core.package_identification:_identify(src/frenet_planner) by extension 'ros'
+[0.805s] DEBUG:colcon.colcon_core.package_identification:Package 'src/frenet_planner' with type 'ros.ament_python' and name 'frenet_planner'
+[0.805s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.805s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.805s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.805s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.805s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'cmake_args' from command line to 'None'
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'cmake_target' from command line to 'None'
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'cmake_clean_cache' from command line to 'False'
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'cmake_clean_first' from command line to 'False'
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'cmake_force_configure' from command line to 'False'
+[0.853s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'ament_cmake_args' from command line to 'None'
+[0.854s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'catkin_cmake_args' from command line to 'None'
+[0.854s] Level 5:colcon.colcon_core.verb:set package 'frenet_planner' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.854s] DEBUG:colcon.colcon_core.verb:Building package 'frenet_planner' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tfjuror/agv_port/build/frenet_planner', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tfjuror/agv_port/install/frenet_planner', 'merge_install': False, 'path': '/home/tfjuror/agv_port/src/frenet_planner', 'symlink_install': False, 'test_result_base': None}
+[0.855s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.859s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.860s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/tfjuror/agv_port/src/frenet_planner' with build type 'ament_python'
+[0.860s] Level 1:colcon.colcon_core.shell:create_environment_hook('frenet_planner', 'ament_prefix_path')
+[0.869s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.869s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/hook/ament_prefix_path.ps1'
+[0.871s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/hook/ament_prefix_path.dsv'
+[0.872s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/hook/ament_prefix_path.sh'
+[0.875s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.876s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.881s] DEBUG:colcon.colcon_core.shell:Ignoring prefix path '/opt/ros/foxy'
+[1.441s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/tfjuror/agv_port/src/frenet_planner'
+[1.443s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.443s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.447s] DEBUG:colcon.colcon_core.shell:Ignoring prefix path '/opt/ros/foxy'
+[1.467s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tfjuror/agv_port/src/frenet_planner': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/frenet_planner build --build-base /home/tfjuror/agv_port/build/frenet_planner/build install --prefix /home/tfjuror/agv_port/install/frenet_planner --record /home/tfjuror/agv_port/build/frenet_planner/install.log --single-version-externally-managed
+[2.214s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tfjuror/agv_port/src/frenet_planner' returned '0': CONDA_PROMPT_MODIFIER=(base) PYTHONPATH=/home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/frenet_planner build --build-base /home/tfjuror/agv_port/build/frenet_planner/build install --prefix /home/tfjuror/agv_port/install/frenet_planner --record /home/tfjuror/agv_port/build/frenet_planner/install.log --single-version-externally-managed
+[2.223s] Level 1:colcon.colcon_core.environment:checking '/home/tfjuror/agv_port/install/frenet_planner' for CMake module files
+[2.224s] Level 1:colcon.colcon_core.environment:checking '/home/tfjuror/agv_port/install/frenet_planner' for CMake config files
+[2.226s] Level 1:colcon.colcon_core.environment:checking '/home/tfjuror/agv_port/install/frenet_planner/lib'
+[2.226s] Level 1:colcon.colcon_core.environment:checking '/home/tfjuror/agv_port/install/frenet_planner/bin'
+[2.226s] Level 1:colcon.colcon_core.environment:checking '/home/tfjuror/agv_port/install/frenet_planner/lib/pkgconfig/frenet_planner.pc'
+[2.227s] Level 1:colcon.colcon_core.environment:checking '/home/tfjuror/agv_port/install/frenet_planner/lib/python3.8/site-packages'
+[2.227s] Level 1:colcon.colcon_core.shell:create_environment_hook('frenet_planner', 'pythonpath')
+[2.228s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/hook/pythonpath.ps1'
+[2.229s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/hook/pythonpath.dsv'
+[2.230s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/hook/pythonpath.sh'
+[2.231s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(frenet_planner)
+[2.233s] INFO:colcon.colcon_core.shell:Creating package script '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/package.ps1'
+[2.235s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/package.dsv'
+[2.237s] INFO:colcon.colcon_core.shell:Creating package script '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/package.sh'
+[2.238s] INFO:colcon.colcon_core.shell:Creating package script '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/package.bash'
+[2.240s] INFO:colcon.colcon_core.shell:Creating package script '/home/tfjuror/agv_port/install/frenet_planner/share/frenet_planner/package.zsh'
+[2.242s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/tfjuror/agv_port/install/frenet_planner/share/colcon-core/packages/frenet_planner)
+[2.242s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.243s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.243s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[2.244s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.258s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.258s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.258s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.296s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.298s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tfjuror/agv_port/install/local_setup.ps1'
+[2.301s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/tfjuror/agv_port/install/_local_setup_util_ps1.py'
+[2.304s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tfjuror/agv_port/install/setup.ps1'
+[2.310s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tfjuror/agv_port/install/local_setup.sh'
+[2.312s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/tfjuror/agv_port/install/_local_setup_util_sh.py'
+[2.313s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tfjuror/agv_port/install/setup.sh'
+[2.319s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tfjuror/agv_port/install/local_setup.bash'
+[2.320s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tfjuror/agv_port/install/setup.bash'
+[2.326s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tfjuror/agv_port/install/local_setup.zsh'
+[2.328s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tfjuror/agv_port/install/setup.zsh'
