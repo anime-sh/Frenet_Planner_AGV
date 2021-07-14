@@ -8,6 +8,7 @@
   <license>TODO: License declaration</license>
   
   <exec_depend>rclpy</exec_depend>
+  <!-- <exec_depend>tf2_ros</exec_depend> -->
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <!-- <exec_depend>quintic_polynomials_planner</exec_depend>

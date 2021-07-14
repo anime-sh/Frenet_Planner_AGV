@@ -24,12 +24,15 @@ import os
 
 import rclpy
 from rclpy.node import Node
+# import tf2_ros
+# from tf2_ros.transformations import quaternion_from_euler
 from nav_msgs.msg import Path
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import PolygonStamped
 
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
@@ -279,9 +282,36 @@ def generate_target_course(x, y):
 
     return rx, ry, ryaw, rk, csp
 
-def path_to_msg(path):
-    # loc = PoseStamped()
-    pass
+def quaternion_from_euler(yaw, pitch, roll):
+
+        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+
+        return [qx, qy, qz, qw]
+
+def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
+    path_msg = Path()
+    loc = PoseStamped()
+    x_vec = path.x
+    y_vec = path.y
+    for i in range(len(path.x)):
+        loc.pose.position.x = x_vec[i]
+        loc.pose.position.y = y_vec[i]
+        delta_theta = np.arctan(c_d_d / ((1 - rk[i] * c_d) * c_speed))
+        yaw = delta_theta + ryaw[i]
+        q = quaternion_from_euler(0, 0, yaw)
+        q=np.array(q)
+        denom= np.sqrt(np.sum(q*q))
+        q_norm = [float(i)/denom for i in q]
+        # tf.quaternionTFToMsg(q, loc.pose.orientation)
+        loc.pose.orientation.x= q_norm[0] 
+        loc.pose.orientation.y= q_norm[1]
+        loc.pose.orientation.z= q_norm[2]
+        loc.pose.orientation.w= q_norm[3]
+        path_msg.poses.append(loc)
+    return path_msg
 
 
 class Frenet_Planner(Node):
@@ -386,7 +416,7 @@ def main():
             plt.title("v[km/h]:" + str(c_speed * 3.6)[0:4])
             plt.grid(True)
             plt.pause(0.0001)
-        # path_msg=path_to_msg(path)
+        path_msg=path_to_msg(path,tc,tyaw,c_speed,c_d,c_d_d)
         frenet_planner.frenet_path.publish(path_msg)
 
     print("Finish")
