@@ -67,27 +67,33 @@ def main(args=None):
     grid._data[5050] = 100
     grid._data[6060] = 100
     grid._data[7070] = 100
-    grid._data[9092] = 100
+    grid._data[9090] = 100
 
     #just dummy values for footprint
+
 
     triangle1 = Point32()
     triangle2 = Point32()
     triangle3 = Point32()
-
+    triangle4 = Point32()
+    side_length=0.5
     triangle1._x = 0.0
     triangle1._y = 0.0 
     triangle1._z = 0.0
 
-    triangle2._x = 2.0
-    triangle2._y = 2.0 
+    triangle2._x = side_length
+    triangle2._y = side_length 
     triangle2._z = 0.0
 
-    triangle3._x = -2.0
-    triangle3._y = -2.0
+    triangle3._x = 0.0
+    triangle3._y = side_length
     triangle3._z = 0.0
 
-    footprint._polygon._points = [triangle3,triangle1,triangle1]
+    triangle4._x = side_length
+    triangle4._y = 0.0
+    triangle4._z = 0.0
+
+    footprint.polygon.points = [triangle4,triangle2,triangle3,triangle1]
 
     footprint._header._stamp = current_time
     footprint._header._frame_id = 'demo'

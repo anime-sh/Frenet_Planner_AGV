@@ -21,6 +21,7 @@ import copy
 import math
 import sys
 import os
+import bisect
 
 import rclpy
 from rclpy.node import Node
@@ -37,6 +38,8 @@ from geometry_msgs.msg import PolygonStamped
 from rclpy.exceptions import ParameterNotDeclaredException
 from rcl_interfaces.msg import ParameterType
 import rclpy.parameter 
+from geometry_msgs.msg import Polygon
+from geometry_msgs.msg import Point32
 
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
 #                 "/../QuinticPolynomialsPlanner/")
@@ -53,12 +56,47 @@ except ImportError:
 cost_count = 0
 footprint_count = 0
 odom_count = 0
-ob=np.array([])
+ob = np.array([[ 0.5 , 0.5],
+ [10.5 , 10.5],
+ [20.5 , 20.5],
+ [30.5 , 30.5],
+ [40.5 , 40.5],
+ [50.5 , 50.5],
+ [60.5 , 60.5],
+ [70.5 , 70.5],
+ [92.5 , 90.5]]
+)
+
+footprint = PolygonStamped()
+triangle1 = Point32()
+triangle2 = Point32()
+triangle3 = Point32()
+triangle4 = Point32()
+
+triangle1._x = 0.0
+triangle1._y = 0.0 
+triangle1._z = 0.0
+
+triangle2._x = 2.0
+triangle2._y = 2.0 
+triangle2._z = 0.0
+
+triangle3._x = 0.0
+triangle3._y = 2.0
+triangle3._z = 0.0
+
+triangle4._x = 2.0
+triangle4._y = 0.0
+triangle4._z = 0.0
+
+footprint.polygon.points = [triangle4,triangle2,triangle3,triangle1]
+
+# ob = np.array([])
 wx=[]
 wy=[]
 odom = Odometry()
-footprint = PolygonStamped()
 cmap = OccupancyGrid()
+obst_r = 2
 # SIM_LOOP = 500
 
 # Parameter
@@ -73,7 +111,7 @@ MIN_T = 4.0  # min prediction time [m]
 TARGET_SPEED = 30.0 / 3.6  # target speed [m/s]
 D_T_S = 5.0 / 3.6  # target speed sampling length [m/s]
 N_S_SAMPLE = 1  # sampling number of target speed
-ROBOT_RADIUS = 2.0  # robot radius [m]
+ROBOT_RADIUS = 0.75  # robot radius [m]
 STOP_CAR = False
 # cost weights
 K_J = 0.1
@@ -226,15 +264,187 @@ def calc_global_paths(fplist, csp):
     return fplist
 
 
+# def check_collision(fp, ob):
+#     # ob_x = ob[:,0]
+#     # ob_y = ob[:,1]
+#     for i in range(ob.shape[0]):
+#         d = [((ix - ob[i, 0]) ** 2 + (iy - ob[i, 1]) ** 2)
+#              for (ix, iy) in zip(fp.x, fp.y)]
+
+#         collision = any([di <= ROBOT_RADIUS ** 2 for di in d])
+
+#         if collision:
+#             return False
+
+#     return True
+
+# 
+# def transformation(fp,cp,px,py,pyaw):
+#     new_fp = []
+#     broll,bpitch,byaw = euler_from_quaternion(cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w)
+#     bx = cp.position.x
+#     by = cp.position.y
+
+#     theta = pyaw - byaw 
+#     x = px - bx
+#     y = py - by
+
+#     temp_fp = Point32()
+
+#     for i in range(len(fp)):
+#         temp_fp.x = (fp[i].x - bx)*math.cos(theta) + (fp[i].y-by)*math.sin(theta) + x + bx
+#         temp_fp.y = (fp[i].x - bx)*math.sin(theta) + (fp[i].y-by)*math.cos(theta) + y + by
+#         new_fp.append(temp_fp)
+
+#     return new_fp  
+def transformation(fp,cp,px,py,pyaw):
+    _,_,byaw = euler_from_quaternion(cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w)
+
+    theta = pyaw - byaw 
+    
+    x=[]
+    y=[]
+    for i in fp:
+        x.append(i.x)
+        y.append(i.y)
+#     x=fp.x
+#     y=fp.y
+    orig = np.column_stack((np.array(x), np.array(y)))
+    final = np.zeros(orig.shape)
+
+    xc=np.sum(x)/len(fp)
+    yc=np.sum(y)/len(fp)
+    
+    centre = np.array([xc,yc])
+    rot_matrix = np.array([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
+    
+    final = np.dot((orig - centre),rot_matrix) + np.array([px,py])
+    
+    
+#     new_fp= fp
+#     new_fp.x=final[:,0]
+#     new_fp.y=final[:,1]
+#     plt.plot(orig[:,0],orig[:,1])
+#     plt.plot(final[:,0],final[:,1])
+    
+    new_fp=[]
+    for i in range(len(final)):
+        temp=Point32()
+        x=final[i][0]
+        y=final[i][1]
+        temp.x=x
+        temp.y=y
+        new_fp.append(temp)
+        
+    # print(final)    
+    return new_fp
+
+def dist(x1 , y1 , x2 , y2):
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+def point_obcheck(p , obst_r,ob):
+    
+    ob_x = ob[:,0].tolist()
+    ob_y = ob[:,1].tolist()
+    print(ob_x)
+    print(ob_y)
+    #print("inside point_obcheck")
+    xlower = 0
+    ylower = 0
+    xupper = 0
+    yupper = 0
+    
+    it = bisect.bisect_left(ob_x,p.x,lo = 0,hi = len(ob_x))
+
+    if len(ob_x)==0:
+        return False
+
+    print(ob_x[0])
+    print(ob_x[-1])
+    if it+0.5==ob_x[0]:
+        xlower = it - ob_x[0]
+        xupper = it - ob_x[0]
+    elif it+0.5==ob_x[-1]:
+        xupper = (it-1)-ob_x[0]
+        xlower = (it-1)-ob_x[0]
+    else:
+        xlower = (it-1)-ob_x[0]
+        xupper = it - ob_x[0]
+
+    # if(xlower < 0):
+    #     return False
+
+    # if(xupper < 0):
+    #     return False
+
+    xlower = int(xlower + 0.5)
+    xupper = int(xupper + 0.5)
+
+    dist1 = dist(p.x , p.y , ob_x[xlower] , ob_y[xlower])
+    dist2 = dist(p.x , p.y , ob_x[xupper] , ob_y[xupper])
+
+    if(min(dist1,dist2)<obst_r):
+        return True
+
+    it = bisect.bisect_left(ob_y,p.y,lo = 0,hi = len(ob_y))
+
+    if it+0.5==ob_x[0]:
+        ylower = it - ob_y[0] 
+        yupper = it - ob_y[0]
+
+    elif it+0.5==ob_x[-1]:
+        yupper = (it-1)-ob_y[0]
+        ylower = (it-1)-ob_y[0]
+    else:
+        ylower = (it-1)-ob_y[0]
+        yupper = it - ob_y[0]
+
+    # if(ylower < 0):
+    #     return False
+
+    # if(yupper < 0):
+    #     return False
+
+    ylower = int(ylower + 0.5)
+    yupper = int(yupper + 0.5)
+    dist1 = dist(p.x , p.y , ob_x[xlower] , ob_y[xlower])
+    dist2 = dist(p.x , p.y , ob_x[xupper] , ob_y[xupper])
+
+    if(min(dist1,dist2)<obst_r):
+        return True
+
+    return False
+
+
+# def check_collision(fp,ob):
+#     #print("inside check_collision")
+
+#     if len(fp.x) != len(fp.s):
+#         return True 
+#     for i in range(min(len(fp.x),len(fp.yaw))):
+#         trans_footprint = transformation(footprint.polygon.points,odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
+#         # print(trans_footprint)
+#         for j in range(len(trans_footprint)):
+#             if point_obcheck(trans_footprint[j],obst_r,ob)==1:
+#                 return True
+    
+#     return False
 def check_collision(fp, ob):
-    for i in range(ob.shape[0]):
-        d = [((ix - ob[i, 0]) ** 2 + (iy - ob[i, 1]) ** 2)
-             for (ix, iy) in zip(fp.x, fp.y)]
+    
+    if(ob==[]):
+        return True
+    for i in range(min(len(fp.x),len(fp.yaw))):
+        trans_footprint = transformation(footprint.polygon.points,odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
+        for j in trans_footprint:
+                for i in range(ob.shape[0]):
+                    # print(ob[i, 0])
+                    ix = j.x
+                    iy = j.y
+                    d = ((ix - ob[i, 0]) ** 2) + ((iy - ob[i, 1]) ** 2)
+                    collision = (d <= ROBOT_RADIUS ** 2 )
+                    if collision:
+                        return False
 
-        collision = any([di <= ROBOT_RADIUS ** 2 for di in d])
-
-        if collision:
-            return False
 
     return True
 
@@ -250,7 +460,7 @@ def check_paths(fplist, ob):
         elif any([abs(c) > MAX_CURVATURE for c in
                   fplist[i].c]):  # Max curvature check
             continue
-        elif not check_collision(fplist[i], ob):
+        elif not check_collision(fplist[i],ob):
             continue
 
         ok_ind.append(i)
@@ -305,6 +515,26 @@ def quaternion_from_euler(yaw, pitch, roll):
 
         return [qx, qy, qz, qw]
 
+def euler_from_quaternion(qx,qy,qz,qw):
+    sinr_cosp = 2*(qw*qx + qy*qz)
+    cosr_csop = 1 - 2*(qx*qx + qy*qy)
+    roll = math.atan2(sinr_cosp,cosr_csop)
+
+    sinp = 2*(qw*qy-qz*qx)
+
+    pitch = 0.0
+
+    if(abs(sinp)>=1):
+        pitch = math.copysign(math.pi/2 , sinp)
+    else:
+        pitch = math.asin(sinp)
+
+    siny_cosp = 2*(qw*qx + qx*qy)
+    cosy_cosp = 1 - 2*(qy*qy + qz*qz)
+    yaw = math.atan2(siny_cosp,cosy_cosp)
+
+    return [roll,pitch,yaw]
+
 def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
     path_msg = Path()
     loc = PoseStamped()
@@ -336,16 +566,16 @@ def find_nearest_in_global_path(global_x, global_y, flag,path):
         bot_x = odom.pose.pose.position.x
         bot_y = odom.pose.pose.position.y
     else:
-        bot_x = path.get_x()[1];
-        bot_y = path.get_y()[1];
-    min_dis = FLT_MAX;
+        bot_x = path.get_x()[1]
+        bot_y = path.get_y()[1]
+    min_dis = FLT_MAX
     for i in range(len(global_x)):
         dis = calc_dis(global_x[i], global_y[i], bot_x, bot_y)
         if (dis < min_dis):
-            min_dis = dis;
-            min_x = global_x[i];
-            min_y = global_y[i];
-            min_id = i;
+            min_dis = dis
+            min_x = global_x[i]
+            min_y = global_y[i]
+            min_id = i
 
 def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_yaw, s0, c_speed, c_d,c_d_d,c_d_dd, path):
     global bot_yaw
@@ -388,11 +618,11 @@ class Frenet_Planner(Node):
         self.target_vel = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.odom_sub = self.create_subscription(Odometry,'base_pose_ground_truth',self.odom_callback,10)
-        self.odom_sub # prevent unused variable warning
+        #self.odom_sub # prevent unused variable warning
         self.footprint_sub = self.create_subscription(PolygonStamped,'footprint',self.footprint_callback,10)
-        self.footprint_sub # prevent unused variable warning
+        #self.footprint_sub # prevent unused variable warning
         self.costmap_sub = self.create_subscription(OccupancyGrid,'costmap',self.costmap_callback,100)
-        self.costmap_sub # prevent unused variable warning
+        #self.costmap_sub # prevent unused variable warning
         global wx
         global wy
 
@@ -402,7 +632,7 @@ class Frenet_Planner(Node):
         self.declare_parameter("W_Y",[])
 
         dummy_param_0 = rclpy.parameter.Parameter("W_X",rclpy.Parameter.Type.DOUBLE_ARRAY,[0.0 , 10.0 , 20.0 , 30.0 , 40.0 , 50.0 , 60.0 , 70.0 , 80.0])
-        dummy_param_1 = rclpy.parameter.Parameter("W_Y",rclpy.Parameter.Type.DOUBLE_ARRAY,[0.0 , 10.0 , 20.0 , 30.0 , 40.0 , 50.0 , 60.0 , 70.0 , 80.0])
+        dummy_param_1 = rclpy.parameter.Parameter("W_Y",rclpy.Parameter.Type.DOUBLE_ARRAY,[0.0 , 15.0 , 20.0 , 40.0 , 40.0 , 45.0 , 60.0 , 77.0 , 80.0])
 
         self.set_parameters([dummy_param_0])
         self.set_parameters([dummy_param_1])
@@ -417,8 +647,10 @@ class Frenet_Planner(Node):
     def footprint_callback(self, msg):
         global footprint
         footprint = msg
+        # print(footprint)
 
     def costmap_callback(self, msg):
+        print("frustrated")
         global cmap
         global ob
         global cost_count
@@ -436,7 +668,7 @@ class Frenet_Planner(Node):
         ob_x= [ ob1[i][0] for i in range(len(ob1)) ]
         ob_y= [ ob1[i][1] for i in range(len(ob1)) ]
         ob = np.column_stack((np.array(ob_x), np.array(ob_y)))
-
+        # print(ob)
 
 def main():
     global min_id
