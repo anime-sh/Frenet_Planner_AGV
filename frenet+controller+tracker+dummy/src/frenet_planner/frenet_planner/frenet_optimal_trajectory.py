@@ -14,7 +14,6 @@ Ref:
 (https://www.youtube.com/watch?v=Cj6tAQe7UCY)
 
 """
-
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
@@ -26,7 +25,7 @@ from rclpy.exceptions import ParameterNotDeclaredException
 from rcl_interfaces.msg import ParameterType
 import rclpy.parameter 
 
-# importing messages
+# import messages
 from nav_msgs.msg import Path
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import Odometry
@@ -36,14 +35,14 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PolygonStamped
 from geometry_msgs.msg import Point32
 
-# importing via reference to ros2 package
+# import via reference to ros2 package
 try:
     from frenet_planner.quintic_polynomials_planner import QuinticPolynomial
     from frenet_planner import cubic_spline_planner
 except ImportError:
     raise
 
-# constants
+# global variables
 cost_count = 0
 footprint_count = 0
 odom_count = 0
@@ -172,6 +171,7 @@ class FrenetPath:
         self.ds = []
         self.c = []
 
+# calculate list of frenet paths given start and end states
 def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
     frenet_paths = []
 
@@ -216,6 +216,7 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
 
     return frenet_paths
 
+# convert frenet paths to global frame
 def calc_global_paths(fplist, csp):
     for fp in fplist:
 
@@ -247,6 +248,8 @@ def calc_global_paths(fplist, csp):
 
     return fplist
 
+# calculate footprint polygon at given position on path via transformation of bot footprint 
+# simple rotation and translation via math referenced here -> https://drive.google.com/file/d/1_xbz9cf8KGwfHLOJU2muVP7nrP_SInJE/view?usp=sharing
 def transformation(foot_p,cp,px,py,pyaw):
     _,_,byaw = euler_from_quaternion(cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w)
 
@@ -280,6 +283,7 @@ def transformation(foot_p,cp,px,py,pyaw):
            
     return new_foot_p
 
+# check for obstacles in a radius given by OBSTACLE_RADIUS around each vertice of transformed polygon
 def check_collision(fp, ob):
     if(ob==[]):
         return True
@@ -296,6 +300,7 @@ def check_collision(fp, ob):
 
     return True
 
+# run collision checks and constraint-checking on all initially generated paths
 def check_paths(fplist, ob):
     ok_ind = []
     for i, _ in enumerate(fplist):
@@ -314,13 +319,14 @@ def check_paths(fplist, ob):
 
     return [fplist[i] for i in ok_ind]
 
+# calculate best_path between start and end states
 def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
     fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0)
     fplist = calc_global_paths(fplist, csp)
     fplist = check_paths(fplist, ob)
 
     # find minimum cost path
-    min_cost = float("inf")
+    min_cost = FLT_MAX
     best_path = None
     for fp in fplist:
         if min_cost >= fp.cf:
@@ -329,6 +335,7 @@ def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
 
     return best_path
 
+# generate central spline from given waypoint coordinates
 def generate_target_course(x, y):
     csp = cubic_spline_planner.Spline2D(x, y)
     s = np.arange(0, csp.s[-1], 0.1)
@@ -343,6 +350,8 @@ def generate_target_course(x, y):
 
     return rx, ry, ryaw, rk, csp
 
+# nearest in global path
+# functionality imitated from cpp codebase
 def find_nearest_in_global_path(global_x, global_y, flag,path):
     global min_id
     global min_x
@@ -363,6 +372,7 @@ def find_nearest_in_global_path(global_x, global_y, flag,path):
             min_y = global_y[i]
             min_id = i
 
+# functionality imitated from cpp codebase
 def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_yaw, s0, c_speed, c_d,c_d_d,c_d_dd, path):
     global bot_yaw
     vx = odom.twist.twist.linear.x
@@ -381,7 +391,7 @@ def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_ya
     if (curl2D < 0):
         c_d =c_d*-1
     s0 = global_s[min_id]
-    bot_yaw = get_bot_yaw()
+    _,_,bot_yaw = euler_from_quaternion(odom.pose.pose.orientation.x,odom.pose.pose.orientation.y,odom.pose.pose.orientation.z,odom.pose.pose.orientation.w)
     g_path_yaw = global_yaw[min_id]
     delta_theta = bot_yaw - g_path_yaw
     c_d_d = v * np.sin(delta_theta)
@@ -390,17 +400,15 @@ def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_ya
     c_d_dd = 0
     return min_id
 
+# calculate target velocity
 def calc_bot_v( d, s_d, d_d,rk):
     return np.sqrt(pow(1 - rk[min_id] * d[len(d) / 2], 2) * pow(s_d[len(s_d) / 2], 2) +pow(d_d[len(d_d) / 2], 2));
 
+# calculate euclidean distance between two points
 def calc_dis( x1, y1, x2, y2):
 	return np.sqrt((x1 - x2)** 2 + (y1 - y2)** 2)
 
-def get_bot_yaw():
-    q = odom.pose.pose.orientation
-    yaw = math.atan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
-    return yaw
-
+# generate Path() message to publish to /frenet_path
 def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
     path_msg = Path()
     loc = PoseStamped()
@@ -422,6 +430,7 @@ def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
         path_msg.poses.append(loc)
     return path_msg
 
+# define publishers, subscribers and respective callback functions
 class Frenet_Planner(Node):
 
     def __init__(self):
@@ -440,7 +449,7 @@ class Frenet_Planner(Node):
         global wx
         global wy
 
-        #dummy stuff
+        #define parameters
         self.declare_parameter("W_X",[])
         self.declare_parameter("W_Y",[])
 
@@ -461,6 +470,7 @@ class Frenet_Planner(Node):
         global footprint
         footprint = msg
 
+    # convert occupancy grid to obstacle list
     def costmap_callback(self, msg):
         global cmap
         global ob
