@@ -1,21 +1,8 @@
-#a few of the extra imports need to be cleaned up later
-
 import rclpy
 import sys
-from rclpy import publisher
-from rclpy.node import Node
-from std_msgs.msg import String 
-from std_msgs.msg import Int16
-from sensor_msgs.msg import Joy
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
-from std_msgs.msg import Header
-from nav_msgs.msg import MapMetaData
-from std_msgs.msg import Int8
-from std_msgs.msg import UInt32
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PolygonStamped
-from geometry_msgs.msg import Polygon
 from geometry_msgs.msg import Point32
 
 
@@ -23,7 +10,7 @@ def main(args=None):
     rclpy.init(args=sys.argv)
     node = rclpy.create_node('demo_publisher')
     ground_truth_publisher = node.create_publisher(Odometry, 'base_pose_ground_truth' ,10)
-    occupancy_grid_publisher = node.create_publisher(OccupancyGrid,'costmap',10)
+    occupancy_grid_publisher = node.create_publisher(OccupancyGrid,'costmap',1000)
     footprint_publisher = node.create_publisher(PolygonStamped,'footprint',10)
 
     msg_3 = Odometry()
@@ -109,9 +96,6 @@ def main(args=None):
 
     rclpy.spin(node)
 
-    # Destroy the timer attached to the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     node.destroy_timer(timer)
     node.destroy_node()
     rclpy.shutdown()

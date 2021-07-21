@@ -19,40 +19,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import math
-import sys
-import os
-import bisect
-
+from frenet_planner.tf2 import quaternion_from_euler,euler_from_quaternion
 import rclpy
 from rclpy.node import Node
-# import tf2_ros
-# from tf2_ros.transformations import quaternion_from_euler
+from rclpy.exceptions import ParameterNotDeclaredException
+from rcl_interfaces.msg import ParameterType
+import rclpy.parameter 
+
+# importing messages
 from nav_msgs.msg import Path
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import PolygonStamped
-from rclpy.exceptions import ParameterNotDeclaredException
-from rcl_interfaces.msg import ParameterType
-import rclpy.parameter 
-from geometry_msgs.msg import Polygon
 from geometry_msgs.msg import Point32
 
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-#                 "/../QuinticPolynomialsPlanner/")
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-#                 "/../CubicSpline/")
-# from quintic_polynomials_planner import QuinticPolynomial
-# import cubic_spline_planner
+# importing via reference to ros2 package
 try:
     from frenet_planner.quintic_polynomials_planner import QuinticPolynomial
     from frenet_planner import cubic_spline_planner
 except ImportError:
     raise
 
+# constants
 cost_count = 0
 footprint_count = 0
 odom_count = 0
@@ -73,9 +64,9 @@ triangle2 = Point32()
 triangle3 = Point32()
 triangle4 = Point32()
 
-triangle1._x = 0.0
-triangle1._y = 0.0 
-triangle1._z = 0.0
+triangle4._x = 0.0
+triangle4._y = 0.0 
+triangle4._z = 0.0
 
 triangle2._x = 2.0
 triangle2._y = 2.0 
@@ -85,21 +76,18 @@ triangle3._x = 0.0
 triangle3._y = 2.0
 triangle3._z = 0.0
 
-triangle4._x = 2.0
-triangle4._y = 0.0
-triangle4._z = 0.0
+triangle1._x = 2.0
+triangle1._y = 0.0
+triangle1._z = 0.0
 
-footprint.polygon.points = [triangle4,triangle2,triangle3,triangle1]
+footprint.polygon.points = [triangle1,triangle2,triangle3,triangle4]
 
-# ob = np.array([])
 wx=[]
 wy=[]
 odom = Odometry()
 cmap = OccupancyGrid()
-obst_r = 2
-# SIM_LOOP = 500
 
-# Parameter
+# Parameters
 MAX_SPEED = 50.0 / 3.6  # maximum speed [m/s]
 MAX_ACCEL = 2.0  # maximum acceleration [m/ss]
 MAX_CURVATURE = 1.0  # maximum curvature [1/m]
@@ -111,7 +99,7 @@ MIN_T = 4.0  # min prediction time [m]
 TARGET_SPEED = 30.0 / 3.6  # target speed [m/s]
 D_T_S = 5.0 / 3.6  # target speed sampling length [m/s]
 N_S_SAMPLE = 1  # sampling number of target speed
-ROBOT_RADIUS = 0.75  # robot radius [m]
+OBSTACLE_RADIUS = 0.75  # obstacle radius [m]
 STOP_CAR = False
 # cost weights
 K_J = 0.1
@@ -119,9 +107,8 @@ K_T = 0.1
 K_D = 1.0
 K_LAT = 1.0
 K_LON = 1.0
-FLT_MAX=sys.float_info.max
+FLT_MAX=float("inf")
 show_animation = True
-
 
 class QuarticPolynomial:
 
@@ -163,7 +150,6 @@ class QuarticPolynomial:
 
         return xt
 
-
 class FrenetPath:
 
     def __init__(self):
@@ -185,7 +171,6 @@ class FrenetPath:
         self.yaw = []
         self.ds = []
         self.c = []
-
 
 def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
     frenet_paths = []
@@ -231,7 +216,6 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
 
     return frenet_paths
 
-
 def calc_global_paths(fplist, csp):
     for fp in fplist:
 
@@ -263,191 +247,54 @@ def calc_global_paths(fplist, csp):
 
     return fplist
 
-
-# def check_collision(fp, ob):
-#     # ob_x = ob[:,0]
-#     # ob_y = ob[:,1]
-#     for i in range(ob.shape[0]):
-#         d = [((ix - ob[i, 0]) ** 2 + (iy - ob[i, 1]) ** 2)
-#              for (ix, iy) in zip(fp.x, fp.y)]
-
-#         collision = any([di <= ROBOT_RADIUS ** 2 for di in d])
-
-#         if collision:
-#             return False
-
-#     return True
-
-# 
-# def transformation(fp,cp,px,py,pyaw):
-#     new_fp = []
-#     broll,bpitch,byaw = euler_from_quaternion(cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w)
-#     bx = cp.position.x
-#     by = cp.position.y
-
-#     theta = pyaw - byaw 
-#     x = px - bx
-#     y = py - by
-
-#     temp_fp = Point32()
-
-#     for i in range(len(fp)):
-#         temp_fp.x = (fp[i].x - bx)*math.cos(theta) + (fp[i].y-by)*math.sin(theta) + x + bx
-#         temp_fp.y = (fp[i].x - bx)*math.sin(theta) + (fp[i].y-by)*math.cos(theta) + y + by
-#         new_fp.append(temp_fp)
-
-#     return new_fp  
-def transformation(fp,cp,px,py,pyaw):
+def transformation(foot_p,cp,px,py,pyaw):
     _,_,byaw = euler_from_quaternion(cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w)
 
     theta = pyaw - byaw 
     
     x=[]
     y=[]
-    for i in fp:
+    for i in foot_p:
         x.append(i.x)
         y.append(i.y)
-#     x=fp.x
-#     y=fp.y
+
     orig = np.column_stack((np.array(x), np.array(y)))
     final = np.zeros(orig.shape)
 
-    xc=np.sum(x)/len(fp)
-    yc=np.sum(y)/len(fp)
+    xc=np.sum(x)/len(foot_p)
+    yc=np.sum(y)/len(foot_p)
     
     centre = np.array([xc,yc])
     rot_matrix = np.array([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
     
     final = np.dot((orig - centre),rot_matrix) + np.array([px,py])
     
-    
-#     new_fp= fp
-#     new_fp.x=final[:,0]
-#     new_fp.y=final[:,1]
-#     plt.plot(orig[:,0],orig[:,1])
-#     plt.plot(final[:,0],final[:,1])
-    
-    new_fp=[]
+    new_foot_p=[]
     for i in range(len(final)):
         temp=Point32()
         x=final[i][0]
         y=final[i][1]
         temp.x=x
         temp.y=y
-        new_fp.append(temp)
-        
-    # print(final)    
-    return new_fp
+        new_foot_p.append(temp)
+           
+    return new_foot_p
 
-def dist(x1 , y1 , x2 , y2):
-    return math.sqrt((x1-x2)**2 + (y1-y2)**2)
-
-def point_obcheck(p , obst_r,ob):
-    
-    ob_x = ob[:,0].tolist()
-    ob_y = ob[:,1].tolist()
-    print(ob_x)
-    print(ob_y)
-    #print("inside point_obcheck")
-    xlower = 0
-    ylower = 0
-    xupper = 0
-    yupper = 0
-    
-    it = bisect.bisect_left(ob_x,p.x,lo = 0,hi = len(ob_x))
-
-    if len(ob_x)==0:
-        return False
-
-    print(ob_x[0])
-    print(ob_x[-1])
-    if it+0.5==ob_x[0]:
-        xlower = it - ob_x[0]
-        xupper = it - ob_x[0]
-    elif it+0.5==ob_x[-1]:
-        xupper = (it-1)-ob_x[0]
-        xlower = (it-1)-ob_x[0]
-    else:
-        xlower = (it-1)-ob_x[0]
-        xupper = it - ob_x[0]
-
-    # if(xlower < 0):
-    #     return False
-
-    # if(xupper < 0):
-    #     return False
-
-    xlower = int(xlower + 0.5)
-    xupper = int(xupper + 0.5)
-
-    dist1 = dist(p.x , p.y , ob_x[xlower] , ob_y[xlower])
-    dist2 = dist(p.x , p.y , ob_x[xupper] , ob_y[xupper])
-
-    if(min(dist1,dist2)<obst_r):
-        return True
-
-    it = bisect.bisect_left(ob_y,p.y,lo = 0,hi = len(ob_y))
-
-    if it+0.5==ob_x[0]:
-        ylower = it - ob_y[0] 
-        yupper = it - ob_y[0]
-
-    elif it+0.5==ob_x[-1]:
-        yupper = (it-1)-ob_y[0]
-        ylower = (it-1)-ob_y[0]
-    else:
-        ylower = (it-1)-ob_y[0]
-        yupper = it - ob_y[0]
-
-    # if(ylower < 0):
-    #     return False
-
-    # if(yupper < 0):
-    #     return False
-
-    ylower = int(ylower + 0.5)
-    yupper = int(yupper + 0.5)
-    dist1 = dist(p.x , p.y , ob_x[xlower] , ob_y[xlower])
-    dist2 = dist(p.x , p.y , ob_x[xupper] , ob_y[xupper])
-
-    if(min(dist1,dist2)<obst_r):
-        return True
-
-    return False
-
-
-# def check_collision(fp,ob):
-#     #print("inside check_collision")
-
-#     if len(fp.x) != len(fp.s):
-#         return True 
-#     for i in range(min(len(fp.x),len(fp.yaw))):
-#         trans_footprint = transformation(footprint.polygon.points,odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
-#         # print(trans_footprint)
-#         for j in range(len(trans_footprint)):
-#             if point_obcheck(trans_footprint[j],obst_r,ob)==1:
-#                 return True
-    
-#     return False
 def check_collision(fp, ob):
-    
     if(ob==[]):
         return True
     for i in range(min(len(fp.x),len(fp.yaw))):
         trans_footprint = transformation(footprint.polygon.points,odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
         for j in trans_footprint:
-                for i in range(ob.shape[0]):
-                    # print(ob[i, 0])
+                for i in range(ob.shape[0]): #currently checks with every obstacle 
                     ix = j.x
                     iy = j.y
                     d = ((ix - ob[i, 0]) ** 2) + ((iy - ob[i, 1]) ** 2)
-                    collision = (d <= ROBOT_RADIUS ** 2 )
+                    collision = (d <= OBSTACLE_RADIUS ** 2 )
                     if collision:
                         return False
 
-
     return True
-
 
 def check_paths(fplist, ob):
     ok_ind = []
@@ -467,7 +314,6 @@ def check_paths(fplist, ob):
 
     return [fplist[i] for i in ok_ind]
 
-
 def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
     fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0)
     fplist = calc_global_paths(fplist, csp)
@@ -483,7 +329,6 @@ def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
 
     return best_path
 
-
 def generate_target_course(x, y):
     csp = cubic_spline_planner.Spline2D(x, y)
     s = np.arange(0, csp.s[-1], 0.1)
@@ -497,65 +342,6 @@ def generate_target_course(x, y):
         rk.append(csp.calc_curvature(i_s))
 
     return rx, ry, ryaw, rk, csp
-
-def calc_dis( x1, y1, x2, y2):
-	return np.sqrt((x1 - x2)** 2 + (y1 - y2)** 2)
-
-def get_bot_yaw():
-    q = odom.pose.pose.orientation
-    yaw = np.arctan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
-    return yaw
-
-def quaternion_from_euler(yaw, pitch, roll):
-
-        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-
-        return [qx, qy, qz, qw]
-
-def euler_from_quaternion(qx,qy,qz,qw):
-    sinr_cosp = 2*(qw*qx + qy*qz)
-    cosr_csop = 1 - 2*(qx*qx + qy*qy)
-    roll = math.atan2(sinr_cosp,cosr_csop)
-
-    sinp = 2*(qw*qy-qz*qx)
-
-    pitch = 0.0
-
-    if(abs(sinp)>=1):
-        pitch = math.copysign(math.pi/2 , sinp)
-    else:
-        pitch = math.asin(sinp)
-
-    siny_cosp = 2*(qw*qx + qx*qy)
-    cosy_cosp = 1 - 2*(qy*qy + qz*qz)
-    yaw = math.atan2(siny_cosp,cosy_cosp)
-
-    return [roll,pitch,yaw]
-
-def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
-    path_msg = Path()
-    loc = PoseStamped()
-    x_vec = path.x
-    y_vec = path.y
-    for i in range(len(path.x)):
-        loc.pose.position.x = x_vec[i]
-        loc.pose.position.y = y_vec[i]
-        delta_theta = np.arctan(c_d_d / ((1 - rk[i] * c_d) * c_speed))
-        yaw = delta_theta + ryaw[i]
-        q = quaternion_from_euler(0, 0, yaw)
-        q=np.array(q)
-        denom= np.sqrt(np.sum(q*q))
-        q_norm = [float(i)/denom for i in q]
-        # tf.quaternionTFToMsg(q, loc.pose.orientation)
-        loc.pose.orientation.x= q_norm[0] 
-        loc.pose.orientation.y= q_norm[1]
-        loc.pose.orientation.z= q_norm[2]
-        loc.pose.orientation.w= q_norm[3]
-        path_msg.poses.append(loc)
-    return path_msg
 
 def find_nearest_in_global_path(global_x, global_y, flag,path):
     global min_id
@@ -604,9 +390,37 @@ def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_ya
     c_d_dd = 0
     return min_id
 
-def calc_bot_v ( d, s_d, d_d,rk):
+def calc_bot_v( d, s_d, d_d,rk):
     return np.sqrt(pow(1 - rk[min_id] * d[len(d) / 2], 2) * pow(s_d[len(s_d) / 2], 2) +pow(d_d[len(d_d) / 2], 2));
 
+def calc_dis( x1, y1, x2, y2):
+	return np.sqrt((x1 - x2)** 2 + (y1 - y2)** 2)
+
+def get_bot_yaw():
+    q = odom.pose.pose.orientation
+    yaw = math.atan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
+    return yaw
+
+def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
+    path_msg = Path()
+    loc = PoseStamped()
+    x_vec = path.x
+    y_vec = path.y
+    for i in range(len(path.x)):
+        loc.pose.position.x = x_vec[i]
+        loc.pose.position.y = y_vec[i]
+        delta_theta = math.atan(c_d_d / ((1 - rk[i] * c_d) * c_speed))
+        yaw = delta_theta + ryaw[i]
+        q = quaternion_from_euler(0, 0, yaw)
+        q=np.array(q)
+        denom= np.sqrt(np.sum(q*q))
+        q_norm = [float(i)/denom for i in q]
+        loc.pose.orientation.x= q_norm[0] 
+        loc.pose.orientation.y= q_norm[1]
+        loc.pose.orientation.z= q_norm[2]
+        loc.pose.orientation.w= q_norm[3]
+        path_msg.poses.append(loc)
+    return path_msg
 
 class Frenet_Planner(Node):
 
@@ -618,16 +432,15 @@ class Frenet_Planner(Node):
         self.target_vel = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.odom_sub = self.create_subscription(Odometry,'base_pose_ground_truth',self.odom_callback,10)
-        #self.odom_sub # prevent unused variable warning
+        self.odom_sub # prevent unused variable warning
         self.footprint_sub = self.create_subscription(PolygonStamped,'footprint',self.footprint_callback,10)
-        #self.footprint_sub # prevent unused variable warning
-        self.costmap_sub = self.create_subscription(OccupancyGrid,'costmap',self.costmap_callback,100)
-        #self.costmap_sub # prevent unused variable warning
+        self.footprint_sub # prevent unused variable warning
+        self.costmap_sub = self.create_subscription(OccupancyGrid,'costmap',self.costmap_callback,1000)
+        self.costmap_sub # prevent unused variable warning
         global wx
         global wy
 
         #dummy stuff
-
         self.declare_parameter("W_X",[])
         self.declare_parameter("W_Y",[])
 
@@ -647,10 +460,8 @@ class Frenet_Planner(Node):
     def footprint_callback(self, msg):
         global footprint
         footprint = msg
-        # print(footprint)
 
     def costmap_callback(self, msg):
-        print("frustrated")
         global cmap
         global ob
         global cost_count
@@ -668,7 +479,6 @@ class Frenet_Planner(Node):
         ob_x= [ ob1[i][0] for i in range(len(ob1)) ]
         ob_y= [ ob1[i][1] for i in range(len(ob1)) ]
         ob = np.column_stack((np.array(ob_x), np.array(ob_y)))
-        # print(ob)
 
 def main():
     global min_id
@@ -677,17 +487,6 @@ def main():
 
     rclpy.init()
     frenet_planner = Frenet_Planner()
-    # # # way points
-    # wx = [0.0, 10.0, 20.5, 35.0, 70.5]
-    # wy = [0.0, -6.0, 5.0, 6.5, 0.0]
-    # # # obstacle lists
-    # ob = np.array([[20.0, 10.0],
-    #                [30.0, 6.0],
-    #                [30.0, 8.0],
-    #                [35.0, 8.0],
-    #                 [50.0, 3.0]
-    #                 ])
-
     tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
 
     # initial state
@@ -712,7 +511,6 @@ def main():
     area = 20.0  # animation area length [m]
     path_msg= Path()
     global_path_msg= Path()
-    # for i in range(SIM_LOOP):
     while (rclpy.ok()):
         path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob)
         min_id=0
@@ -788,9 +586,5 @@ def main():
     frenet_planner.destroy_node()
     rclpy.shutdown()
 
-
 if __name__ == '__main__':
     main()
-
-
-        
