@@ -1,6 +1,8 @@
 import numpy as np
 import math
 
+# convert euler angles to quaternion
+# math referenced here -> https://stackoverflow.com/questions/53033620/how-to-convert-euler-angles-to-quaternions-and-get-the-same-euler-angles-back-fr
 def quaternion_from_euler(yaw, pitch, roll):
 
     qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
@@ -9,6 +11,8 @@ def quaternion_from_euler(yaw, pitch, roll):
     qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
     return [qx, qy, qz, qw]
 
+# convert quaternion to euler angles
+# math referenced here -> https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(qx,qy,qz,qw):
     sinr_cosp = 2*(qw*qx + qy*qz)
     cosr_csop = 1 - 2*(qx*qx + qy*qy)
