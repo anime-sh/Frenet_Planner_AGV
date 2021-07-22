@@ -128,10 +128,6 @@ def callback_feedback(data):
     ki = ki + yi * error * error_sum
     kd = kd + yd * error * error_diff
 
-    #rospy.loginfo("kp is : %f", kp)
-    #rospy.loginfo("ki is : %f", ki)
-    #rospy.loginfo("kd is : %f", kd)
-
     node.get_logger().info("kp is : {f}".format(f=kp))
     node.get_logger().info("ki is : {f}".format(f=ki))
     node.get_logger().info("kd is : {f}".format(f=kd))
@@ -192,16 +188,9 @@ def start():
     rclpy.init(args=sys.argv)
     node = rclpy.create_node('controls')
 
-    #ackermann_cmd_topic = rospy.get_param('~ackermann_cmd_topic', '/prius')
-    #rospy.init_node('controls', anonymous=True)
-
     ackermann_cmd_topic = node.declare_parameter('~ackermann_cmd_topic', '/prius').value
     pub = node.create_publisher(Control,ackermann_cmd_topic,default_depth)
     pub1 = node.create_publisher(Twist,'plot',default_depth)
-
-    #rospy.Subscriber("cmd_vel", Twist, callback_cmd_vel)
-    #rospy.Subscriber("cmd_delta", Twist, callback_delta)
-    #rospy.Subscriber("base_pose_ground_truth", Odometry, callback_feedback)
 
     node.create_subscription(Twist,'cmd_vel',callback_cmd_vel,default_depth)
     node.create_subscription(Twist, 'cmd_delta',callback_delta,default_depth)
