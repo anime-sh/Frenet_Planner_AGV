@@ -16,9 +16,9 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Path
 from prius_msgs.msg import Control
 
-# node name: path_tracking
-# Publish Topic: cmd_delta
-# Subscribe Topic: base_pose_ground_truth, astroid_path
+# node name: pure_pursuit
+# Publish Topic: cmd_delta, cross_track_error
+# Subscribe Topic: frenet_path, /lgsvl/gps_odom
 
 max_vel = 6.0 # maximum linear velocity
 global steer
@@ -31,7 +31,7 @@ global ep_sum
 global ep_avg
 global q
 x_p = Path()
-print ("start")
+
 q=0
 n=0
 ep_avg = 0
@@ -116,7 +116,6 @@ def callback_feedback(data):
     # calculate index of target point on path
     cmd = Twist()
     cmd1 = Twist()
-    prius_vel = Control()
     L = 0
     Lf = k * max_vel + d_lookahead 
     
@@ -154,7 +153,6 @@ def callback_feedback(data):
 
     print ("cmd published")
 
-    # print (ep)
     print (x_p.poses[cp].pose.orientation)
 
 
@@ -220,17 +218,12 @@ def main():
     rclpy.init(args=sys.argv)
     node = rclpy.create_node('path_tracking')
     
-    #rospy.init_node('path_tracking', anonymous=True)
-
     pub2 = node.create_publisher(Twist ,'cross_track_error',10)
     pub1 = node.create_publisher(Twist,'cmd_delta',10)
-    #pub2 = rospy.Publisher('cross_track_error', Twist, queue_size=100)
-    #pub1 = rospy.Publisher('cmd_delta', Twist, queue_size=100)
-	
+
     node.create_subscription(Path, 'frenet_path',callback_path, 10)
-    node.create_subscription(Odometry, 'base_pose_ground_truth',callback_feedback, 10)
-    #rospy.Subscriber("frenet_path", Path, callback_path) 
-    #rospy.Subscriber("base_pose_ground_truth", Odometry, callback_feedback)
+    node.create_subscription(Odometry, '/lgsvl/gps_odom',callback_feedback, 10)
+
 	
     rclpy.spin(node)
 
