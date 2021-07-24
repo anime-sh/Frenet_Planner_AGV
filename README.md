@@ -13,7 +13,7 @@ Open four other terminal tabs at this location and source the setup.
 Run these commands in order one each in the 4 tabs.
 ```
 ros2 run dummy dum_pub 
-ros2 run frenet_planner planner
+ros2 launch frenet_planner planner.launch.py
 ros2 run pure_pursuit_tracker pure_pursuit
 ros2 run py_pubsub PID_Controller
 ```
