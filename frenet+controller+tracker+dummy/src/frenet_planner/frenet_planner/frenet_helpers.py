@@ -3,6 +3,7 @@ from frenet_planner import params
 import numpy as np
 import copy
 import math
+import bisect
 
 # import messages
 from nav_msgs.msg import Path
@@ -182,6 +183,40 @@ def transformation(foot_p,cp,px,py,pyaw):
            
     return new_foot_p
 
+def nearest_obs(point32):
+    p_x=point32.x
+    p_y=point32.y
+    ob_x = params.ob[:,0]
+    ob_y = params.ob[:,1]
+    
+    it = bisect.bisect_left(ob_x,p_x,lo = 0,hi = len(ob_x))
+
+    if it==0:
+        if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS):
+            return False
+    elif it==len(ob_x):
+        it = it-1
+        if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS):
+            return False
+    else:
+        if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS) and (calc_dis(p_x,p_y,ob_x[it-1],ob_y[it-1])> params.OBSTACLE_RADIUS):
+            return False
+
+    it = bisect.bisect_left(ob_y,p_y,lo = 0,hi = len(ob_y))
+
+    if it==0:
+        if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS):
+            return False
+    elif it==len(ob_x):
+        it = it-1
+        if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS):
+            return False
+    else:
+        if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS) and (calc_dis(p_x,p_y,ob_x[it-1],ob_y[it-1])> params.OBSTACLE_RADIUS):
+            return False
+
+    return True
+
 # check for obstacles in a radius given by OBSTACLE_RADIUS around each vertice of transformed polygon
 def check_collision(fp):
     if(params.ob==[]):
@@ -189,13 +224,16 @@ def check_collision(fp):
     for i in range(min(len(fp.x),len(fp.yaw))):
         trans_footprint = transformation(params.footprint.polygon.points,params.odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
         for j in trans_footprint:
-                for i in range(params.ob.shape[0]): #currently checks with every obstacle 
-                    ix = j.x
-                    iy = j.y
-                    d = ((ix - params.ob[i, 0]) ** 2) + ((iy - params.ob[i, 1]) ** 2)
-                    collision = (d <= params.OBSTACLE_RADIUS ** 2 )
-                    if collision:
-                        return False
+                # for i in range(params.ob.shape[0]): #currently checks with every obstacle 
+                #     ix = j.x
+                #     iy = j.y
+                #     d = ((ix - params.ob[i, 0]) ** 2) + ((iy - params.ob[i, 1]) ** 2)
+                #     collision = (d <= params.OBSTACLE_RADIUS ** 2 )
+                #     if collision:
+                #         return False
+                collision = nearest_obs(j)
+                if not collision:
+                    return False
 
     return True
 
