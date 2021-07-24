@@ -1,0 +1,26 @@
+/frenet_planner:
+  ros__parameters:
+    KJ: 0.01
+    KT: 5.0
+    KD: 0.5
+    KD_V: 0.5
+    KLAT: 1.0
+    KLON: 2.0
+    MAX_SPEED: 13.89
+    MAX_ACCEL: 5.0
+    MAX_CURVATURE: 2.0
+    MAX_ROAD_WIDTH: 10.0
+    D_ROAD_W: 1.0
+    DT: 0.2
+    MAXT: 6.0
+    MINT: 2.0
+    TARGET_SPEED: 8.33
+    D_T_S: 1.389
+    N_S_SAMPLE: 1.5
+    ROBOT_RADIUS: 2.0
+    MIN_LAT_VEL: -1.0 
+    MAX_LAT_VEL: 1.0
+    D_D_NS: 0.5
+    MAX_SHIFT_D: 3.0
+    W_X: [38.0, 38.0, 38.0, 38.0, 38.0, 38.0, 38.0 , 38.21, 39.25, 42.56, 48.97, 61.0]
+    W_Y: [-57.0, -45.0, -32.0, -18.5, -12.0, 0.0, 12.0, 35.0, 42.89, 80.41, 131.48, 139.47]
