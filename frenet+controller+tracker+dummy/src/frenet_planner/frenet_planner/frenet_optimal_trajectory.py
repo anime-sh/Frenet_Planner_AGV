@@ -16,13 +16,8 @@ Ref:
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import copy
-import math
-from frenet_planner.tf2 import quaternion_from_euler,euler_from_quaternion
 import rclpy
 from rclpy.node import Node
-from rclpy.exceptions import ParameterNotDeclaredException
-from rcl_interfaces.msg import ParameterType
 import rclpy.parameter 
 
 # import messages
@@ -36,399 +31,61 @@ from geometry_msgs.msg import PolygonStamped
 from geometry_msgs.msg import Point32
 
 # import via reference to ros2 package
-try:
-    from frenet_planner.quintic_polynomials_planner import QuinticPolynomial
-    from frenet_planner import cubic_spline_planner
-except ImportError:
-    raise
+from frenet_planner import params
+from frenet_planner.frenet_helpers import *
 
-# global variables
+show_animation = True
 cost_count = 0
 footprint_count = 0
 odom_count = 0
-ob = np.array([[ 0.5 , 0.5],
- [10.5 , 10.5],
- [20.5 , 20.5],
- [30.5 , 30.5],
- [40.5 , 40.5],
- [50.5 , 50.5],
- [60.5 , 60.5],
- [70.5 , 70.5],
- [92.5 , 90.5]]
-)
-
-footprint = PolygonStamped()
-triangle1 = Point32()
-triangle2 = Point32()
-triangle3 = Point32()
-triangle4 = Point32()
-
-triangle4._x = 0.0
-triangle4._y = 0.0 
-triangle4._z = 0.0
-
-triangle2._x = 2.0
-triangle2._y = 2.0 
-triangle2._z = 0.0
-
-triangle3._x = 0.0
-triangle3._y = 2.0
-triangle3._z = 0.0
-
-triangle1._x = 2.0
-triangle1._y = 0.0
-triangle1._z = 0.0
-
-footprint.polygon.points = [triangle1,triangle2,triangle3,triangle4]
-
-wx=[]
-wy=[]
-odom = Odometry()
-cmap = OccupancyGrid()
-
-# Parameters
-MAX_SPEED = 50.0 / 3.6  # maximum speed [m/s]
-MAX_ACCEL = 2.0  # maximum acceleration [m/ss]
-MAX_CURVATURE = 1.0  # maximum curvature [1/m]
-MAX_ROAD_WIDTH = 7.0  # maximum road width [m]
-D_ROAD_W = 1.0  # road width sampling length [m]
-DT = 0.2  # time tick [s]
-MAX_T = 5.0  # max prediction time [m]
-MIN_T = 4.0  # min prediction time [m]
-TARGET_SPEED = 30.0 / 3.6  # target speed [m/s]
-D_T_S = 5.0 / 3.6  # target speed sampling length [m/s]
-N_S_SAMPLE = 1  # sampling number of target speed
-OBSTACLE_RADIUS = 0.75  # obstacle radius [m]
-STOP_CAR = False
-# cost weights
-K_J = 0.1
-K_T = 0.1
-K_D = 1.0
-K_LAT = 1.0
-K_LON = 1.0
-FLT_MAX=float("inf")
-show_animation = True
-
-class QuarticPolynomial:
-
-    def __init__(self, xs, vxs, axs, vxe, axe, time):
-        # calc coefficient of quartic polynomial
-
-        self.a0 = xs
-        self.a1 = vxs
-        self.a2 = axs / 2.0
-
-        A = np.array([[3 * time ** 2, 4 * time ** 3],
-                      [6 * time, 12 * time ** 2]])
-        b = np.array([vxe - self.a1 - 2 * self.a2 * time,
-                      axe - 2 * self.a2])
-        x = np.linalg.solve(A, b)
-
-        self.a3 = x[0]
-        self.a4 = x[1]
-
-    def calc_point(self, t):
-        xt = self.a0 + self.a1 * t + self.a2 * t ** 2 + \
-             self.a3 * t ** 3 + self.a4 * t ** 4
-
-        return xt
-
-    def calc_first_derivative(self, t):
-        xt = self.a1 + 2 * self.a2 * t + \
-             3 * self.a3 * t ** 2 + 4 * self.a4 * t ** 3
-
-        return xt
-
-    def calc_second_derivative(self, t):
-        xt = 2 * self.a2 + 6 * self.a3 * t + 12 * self.a4 * t ** 2
-
-        return xt
-
-    def calc_third_derivative(self, t):
-        xt = 6 * self.a3 + 24 * self.a4 * t
-
-        return xt
-
-class FrenetPath:
-
-    def __init__(self):
-        self.t = []
-        self.d = []
-        self.d_d = []
-        self.d_dd = []
-        self.d_ddd = []
-        self.s = []
-        self.s_d = []
-        self.s_dd = []
-        self.s_ddd = []
-        self.cd = 0.0
-        self.cv = 0.0
-        self.cf = 0.0
-
-        self.x = []
-        self.y = []
-        self.yaw = []
-        self.ds = []
-        self.c = []
-
-# calculate list of frenet paths given start and end states
-def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
-    frenet_paths = []
-
-    # generate path to each offset goal
-    for di in np.arange(-MAX_ROAD_WIDTH, MAX_ROAD_WIDTH, D_ROAD_W):
-
-        # Lateral motion planning
-        for Ti in np.arange(MIN_T, MAX_T, DT):
-            fp = FrenetPath()
-
-            # lat_qp = quintic_polynomial(c_d, c_d_d, c_d_dd, di, 0.0, 0.0, Ti)
-            lat_qp = QuinticPolynomial(c_d, c_d_d, c_d_dd, di, 0.0, 0.0, Ti)
-
-            fp.t = [t for t in np.arange(0.0, Ti, DT)]
-            fp.d = [lat_qp.calc_point(t) for t in fp.t]
-            fp.d_d = [lat_qp.calc_first_derivative(t) for t in fp.t]
-            fp.d_dd = [lat_qp.calc_second_derivative(t) for t in fp.t]
-            fp.d_ddd = [lat_qp.calc_third_derivative(t) for t in fp.t]
-
-            # Longitudinal motion planning (Velocity keeping)
-            for tv in np.arange(TARGET_SPEED - D_T_S * N_S_SAMPLE,
-                                TARGET_SPEED + D_T_S * N_S_SAMPLE, D_T_S):
-                tfp = copy.deepcopy(fp)
-                lon_qp = QuarticPolynomial(s0, c_speed, 0.0, tv, 0.0, Ti)
-
-                tfp.s = [lon_qp.calc_point(t) for t in fp.t]
-                tfp.s_d = [lon_qp.calc_first_derivative(t) for t in fp.t]
-                tfp.s_dd = [lon_qp.calc_second_derivative(t) for t in fp.t]
-                tfp.s_ddd = [lon_qp.calc_third_derivative(t) for t in fp.t]
-
-                Jp = sum(np.power(tfp.d_ddd, 2))  # square of jerk
-                Js = sum(np.power(tfp.s_ddd, 2))  # square of jerk
-
-                # square of diff from target speed
-                ds = (TARGET_SPEED - tfp.s_d[-1]) ** 2
-
-                tfp.cd = K_J * Jp + K_T * Ti + K_D * tfp.d[-1] ** 2
-                tfp.cv = K_J * Js + K_T * Ti + K_D * ds
-                tfp.cf = K_LAT * tfp.cd + K_LON * tfp.cv
-
-                frenet_paths.append(tfp)
-
-    return frenet_paths
-
-# convert frenet paths to global frame
-def calc_global_paths(fplist, csp):
-    for fp in fplist:
-
-        # calc global positions
-        for i in range(len(fp.s)):
-            ix, iy = csp.calc_position(fp.s[i])
-            if ix is None:
-                break
-            i_yaw = csp.calc_yaw(fp.s[i])
-            di = fp.d[i]
-            fx = ix + di * math.cos(i_yaw + math.pi / 2.0)
-            fy = iy + di * math.sin(i_yaw + math.pi / 2.0)
-            fp.x.append(fx)
-            fp.y.append(fy)
-
-        # calc yaw and ds
-        for i in range(len(fp.x) - 1):
-            dx = fp.x[i + 1] - fp.x[i]
-            dy = fp.y[i + 1] - fp.y[i]
-            fp.yaw.append(math.atan2(dy, dx))
-            fp.ds.append(math.hypot(dx, dy))
-
-        fp.yaw.append(fp.yaw[-1])
-        fp.ds.append(fp.ds[-1])
-
-        # calc curvature
-        for i in range(len(fp.yaw) - 1):
-            fp.c.append((fp.yaw[i + 1] - fp.yaw[i]) / fp.ds[i])
-
-    return fplist
-
-# calculate footprint polygon at given position on path via transformation of bot footprint 
-# simple rotation and translation via math referenced here -> https://drive.google.com/file/d/1_xbz9cf8KGwfHLOJU2muVP7nrP_SInJE/view?usp=sharing
-def transformation(foot_p,cp,px,py,pyaw):
-    _,_,byaw = euler_from_quaternion(cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w)
-
-    theta = pyaw - byaw 
-    
-    x=[]
-    y=[]
-    for i in foot_p:
-        x.append(i.x)
-        y.append(i.y)
-
-    orig = np.column_stack((np.array(x), np.array(y)))
-    final = np.zeros(orig.shape)
-
-    xc=np.sum(x)/len(foot_p)
-    yc=np.sum(y)/len(foot_p)
-    
-    centre = np.array([xc,yc])
-    rot_matrix = np.array([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
-    
-    final = np.dot((orig - centre),rot_matrix) + np.array([px,py])
-    
-    new_foot_p=[]
-    for i in range(len(final)):
-        temp=Point32()
-        x=final[i][0]
-        y=final[i][1]
-        temp.x=x
-        temp.y=y
-        new_foot_p.append(temp)
-           
-    return new_foot_p
-
-# check for obstacles in a radius given by OBSTACLE_RADIUS around each vertice of transformed polygon
-def check_collision(fp, ob):
-    if(ob==[]):
-        return True
-    for i in range(min(len(fp.x),len(fp.yaw))):
-        trans_footprint = transformation(footprint.polygon.points,odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
-        for j in trans_footprint:
-                for i in range(ob.shape[0]): #currently checks with every obstacle 
-                    ix = j.x
-                    iy = j.y
-                    d = ((ix - ob[i, 0]) ** 2) + ((iy - ob[i, 1]) ** 2)
-                    collision = (d <= OBSTACLE_RADIUS ** 2 )
-                    if collision:
-                        return False
-
-    return True
-
-# run collision checks and constraint-checking on all initially generated paths
-def check_paths(fplist, ob):
-    ok_ind = []
-    for i, _ in enumerate(fplist):
-        if any([v > MAX_SPEED for v in fplist[i].s_d]):  # Max speed check
-            continue
-        elif any([abs(a) > MAX_ACCEL for a in
-                  fplist[i].s_dd]):  # Max accel check
-            continue
-        elif any([abs(c) > MAX_CURVATURE for c in
-                  fplist[i].c]):  # Max curvature check
-            continue
-        elif not check_collision(fplist[i],ob):
-            continue
-
-        ok_ind.append(i)
-
-    return [fplist[i] for i in ok_ind]
-
-# calculate best_path between start and end states
-def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
-    fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0)
-    fplist = calc_global_paths(fplist, csp)
-    fplist = check_paths(fplist, ob)
-
-    # find minimum cost path
-    min_cost = FLT_MAX
-    best_path = None
-    for fp in fplist:
-        if min_cost >= fp.cf:
-            min_cost = fp.cf
-            best_path = fp
-
-    return best_path
-
-# generate central spline from given waypoint coordinates
-def generate_target_course(x, y):
-    csp = cubic_spline_planner.Spline2D(x, y)
-    s = np.arange(0, csp.s[-1], 0.1)
-
-    rx, ry, ryaw, rk = [], [], [], []
-    for i_s in s:
-        ix, iy = csp.calc_position(i_s)
-        rx.append(ix)
-        ry.append(iy)
-        ryaw.append(csp.calc_yaw(i_s))
-        rk.append(csp.calc_curvature(i_s))
-
-    return rx, ry, ryaw, rk, csp
-
-# nearest in global path
-# functionality imitated from cpp codebase
-def find_nearest_in_global_path(global_x, global_y, flag,path):
-    global min_id
-    global min_x
-    global min_y
-    global min_dis
-    if (flag == 0):
-        bot_x = odom.pose.pose.position.x
-        bot_y = odom.pose.pose.position.y
-    else:
-        bot_x = path.get_x()[1]
-        bot_y = path.get_y()[1]
-    min_dis = FLT_MAX
-    for i in range(len(global_x)):
-        dis = calc_dis(global_x[i], global_y[i], bot_x, bot_y)
-        if (dis < min_dis):
-            min_dis = dis
-            min_x = global_x[i]
-            min_y = global_y[i]
-            min_id = i
 
 # functionality imitated from cpp codebase
-def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_yaw, s0, c_speed, c_d,c_d_d,c_d_dd, path):
-    global bot_yaw
-    vx = odom.twist.twist.linear.x
-    vy = odom.twist.twist.linear.y
+def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_yaw, path):
+    global s0
+    global c_speed
+    global c_d
+    global c_d_d
+    global c_d_dd
+
+    vx = params.odom.twist.twist.linear.x
+    vy = params.odom.twist.twist.linear.y
     v = np.sqrt(vx * vx + vy * vy)
 
     find_nearest_in_global_path(global_x, global_y, 0, path)
 
     vec1=[0,0]
     vec2=[0,0]
-    vec1[0] = odom.pose.pose.position.x - global_x[min_id]
-    vec1[1] = odom.pose.pose.position.y - global_y[min_id]
-    vec2[0] = global_x[min_id] - global_x[min_id + 1]
-    vec2[1] = global_y[min_id] - global_y[min_id + 1]
+    vec1[0] = params.odom.pose.pose.position.x - global_x[params.min_id]
+    vec1[1] = params.odom.pose.pose.position.y - global_y[params.min_id]
+    vec2[0] = global_x[params.min_id] - global_x[params.min_id + 1]
+    vec2[1] = global_y[params.min_id] - global_y[params.min_id + 1]
     curl2D = vec1[0] * vec2[1] - vec2[0] * vec1[1]
     if (curl2D < 0):
-        c_d =c_d*-1
-    s0 = global_s[min_id]
-    _,_,bot_yaw = euler_from_quaternion(odom.pose.pose.orientation.x,odom.pose.pose.orientation.y,odom.pose.pose.orientation.z,odom.pose.pose.orientation.w)
-    g_path_yaw = global_yaw[min_id]
+        c_d = c_d * -1
+    s0 = global_s[params.min_id]
+    _,_,bot_yaw = euler_from_quaternion(params.odom.pose.pose.orientation.x,params.odom.pose.pose.orientation.y,params.odom.pose.pose.orientation.z,params.odom.pose.pose.orientation.w)
+    g_path_yaw = global_yaw[params.min_id]
     delta_theta = bot_yaw - g_path_yaw
     c_d_d = v * np.sin(delta_theta)
-    k_r = global_R[min_id]
+    k_r = global_R[params.min_id]
     c_speed = v * np.cos(delta_theta) / (1 - k_r * c_d)
     c_d_dd = 0
-    return min_id
+    return params.min_id
 
-# calculate target velocity
-def calc_bot_v( d, s_d, d_d,rk):
-    return np.sqrt(pow(1 - rk[min_id] * d[len(d) / 2], 2) * pow(s_d[len(s_d) / 2], 2) +pow(d_d[len(d_d) / 2], 2));
-
-# calculate euclidean distance between two points
-def calc_dis( x1, y1, x2, y2):
-	return np.sqrt((x1 - x2)** 2 + (y1 - y2)** 2)
-
-# generate Path() message to publish to /frenet_path
-def path_to_msg(path,rk,ryaw,c_speed,c_d,c_d_d):
-    path_msg = Path()
-    loc = PoseStamped()
-    x_vec = path.x
-    y_vec = path.y
-    for i in range(len(path.x)):
-        loc.pose.position.x = x_vec[i]
-        loc.pose.position.y = y_vec[i]
-        delta_theta = math.atan(c_d_d / ((1 - rk[i] * c_d) * c_speed))
-        yaw = delta_theta + ryaw[i]
-        q = quaternion_from_euler(0, 0, yaw)
-        q=np.array(q)
-        denom= np.sqrt(np.sum(q*q))
-        q_norm = [float(i)/denom for i in q]
-        loc.pose.orientation.x= q_norm[0] 
-        loc.pose.orientation.y= q_norm[1]
-        loc.pose.orientation.z= q_norm[2]
-        loc.pose.orientation.w= q_norm[3]
-        path_msg.poses.append(loc)
-    return path_msg
+# nearest in global path
+# functionality imitated from cpp codebase
+def find_nearest_in_global_path(global_x, global_y, flag,path):
+    if (flag == 0):
+        bot_x = params.odom.pose.pose.position.x
+        bot_y = params.odom.pose.pose.position.y
+    else:
+        bot_x = path.get_x()[1]
+        bot_y = path.get_y()[1]
+    min_dis = params.FLT_MAX
+    for i in range(len(global_x)):
+        dis = calc_dis(global_x[i], global_y[i], bot_x, bot_y)
+        if (dis < min_dis):
+            params.min_id = i
 
 # define publishers, subscribers and respective callback functions
 class Frenet_Planner(Node):
@@ -446,38 +103,70 @@ class Frenet_Planner(Node):
         self.footprint_sub # prevent unused variable warning
         self.costmap_sub = self.create_subscription(OccupancyGrid,'costmap',self.costmap_callback,1000)
         self.costmap_sub # prevent unused variable warning
-        global wx
-        global wy
 
-        #define parameters
-        self.declare_parameter("W_X",[])
-        self.declare_parameter("W_Y",[])
+        self.declare_parameters(
+        namespace='',
+        parameters=[
+            ('K_J', 0.0),
+            ('K_T', 0.0),
+            ('K_D', 0.0),
+            ('K_LAT', 0.0),
+            ('K_LON', 0.0),
+            ('MAX_SPEED', 0.0),
+            ('MAX_ACCEL', 0.0),
+            ('MAX_CURVATURE', 0.0),
+            ('MAX_ROAD_WIDTH', 0.0),
+            ('D_ROAD_W', 0.0),
+            ('DT', 0.0),
+            ('MAX_T', 0.0),
+            ('MIN_T', 0.0),
+            ('TARGET_SPEED', 0.0),
+            ('D_T_S', 0.0),
+            ('N_S_SAMPLE', 0.0),
+            ('OBSTACLE_RADIUS', 0.0),
+            ('MIN_LAT_VEL', 0.0),
+            ('MAX_LAT_VEL', 0.0),
+            ('D_D_NS', 0.0),
+            ('W_X', [0.0,1.0]),
+            ('W_Y', [0.0,1.0]),
+            ('LOOKAHEAD_DIST', 0.0)
+        ])
+        params.K_J = self.get_parameter("K_J").get_parameter_value().double_value
+        params.K_T = self.get_parameter("K_T").get_parameter_value().double_value
+        params.K_D = self.get_parameter("K_D").get_parameter_value().double_value
+        params.K_LAT = self.get_parameter("K_LAT").get_parameter_value().double_value
+        params.K_LON = self.get_parameter("K_LON").get_parameter_value().double_value
+        params.MAX_SPEED = self.get_parameter("MAX_SPEED").get_parameter_value().double_value
+        params.MAX_ACCEL = self.get_parameter("MAX_ACCEL").get_parameter_value().double_value
+        params.MAX_CURVATURE = self.get_parameter("MAX_CURVATURE").get_parameter_value().double_value
+        params.MAX_ROAD_WIDTH = self.get_parameter("MAX_ROAD_WIDTH").get_parameter_value().double_value
+        params.D_ROAD_W = self.get_parameter("D_ROAD_W").get_parameter_value().double_value
+        params.DT = self.get_parameter("DT").get_parameter_value().double_value
+        params.MAX_T = self.get_parameter("MAX_T").get_parameter_value().double_value
+        params.MIN_T = self.get_parameter("MIN_T").get_parameter_value().double_value
+        params.TARGET_SPEED = self.get_parameter("TARGET_SPEED").get_parameter_value().double_value
+        params.D_T_S = self.get_parameter("D_T_S").get_parameter_value().double_value
+        params.N_S_SAMPLE = self.get_parameter("N_S_SAMPLE").get_parameter_value().double_value
+        params.OBSTACLE_RADIUS = self.get_parameter("OBSTACLE_RADIUS").get_parameter_value().double_value
+        params.MIN_LAT_VEL=self.get_parameter("MIN_LAT_VEL").get_parameter_value().double_value
+        params.MAX_LAT_VEL=self.get_parameter("MAX_LAT_VEL").get_parameter_value().double_value
+        params.D_D_NS=self.get_parameter("D_D_NS").get_parameter_value().double_value
+        params.W_X = self.get_parameter("W_X").get_parameter_value().double_array_value
+        params.W_Y = self.get_parameter("W_Y").get_parameter_value().double_array_value
+        params.LOOKAHEAD_DIST=self.get_parameter("LOOKAHEAD_DIST").get_parameter_value().double_value
 
-        dummy_param_0 = rclpy.parameter.Parameter("W_X",rclpy.Parameter.Type.DOUBLE_ARRAY,[0.0 , 10.0 , 20.0 , 30.0 , 40.0 , 50.0 , 60.0 , 70.0 , 80.0])
-        dummy_param_1 = rclpy.parameter.Parameter("W_Y",rclpy.Parameter.Type.DOUBLE_ARRAY,[0.0 , 15.0 , 20.0 , 40.0 , 40.0 , 45.0 , 60.0 , 77.0 , 80.0])
-
-        self.set_parameters([dummy_param_0])
-        self.set_parameters([dummy_param_1])
-
-        wx = self.get_parameter("W_X").get_parameter_value().double_array_value
-        wy = self.get_parameter("W_Y").get_parameter_value().double_array_value
-        
     def odom_callback(self, msg):
-        global odom
-        odom = msg
+        params.odom = msg
 
     def footprint_callback(self, msg):
-        global footprint
-        footprint = msg
+        params.footprint = msg
 
     # convert occupancy grid to obstacle list
     def costmap_callback(self, msg):
-        global cmap
-        global ob
         global cost_count
         cost_count+=1
         ob1=[]
-        cmap=msg
+        params.cmap=msg
         origin=Pose()
         origin=msg.info.origin
         for width in range(0,msg.info.width):
@@ -488,16 +177,15 @@ class Frenet_Planner(Node):
         ob1.sort()
         ob_x= [ ob1[i][0] for i in range(len(ob1)) ]
         ob_y= [ ob1[i][1] for i in range(len(ob1)) ]
-        ob = np.column_stack((np.array(ob_x), np.array(ob_y)))
+        params.ob = np.column_stack((np.array(ob_x), np.array(ob_y)))
 
 def main():
-    global min_id
     gotOdom = False
     print(__file__ + " start!!")
 
     rclpy.init()
     frenet_planner = Frenet_Planner()
-    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
+    tx, ty, tyaw, tc, csp = generate_target_course(params.W_X, params.W_Y)
 
     # initial state
     c_speed = 10.0 / 3.6  # current speed [m/s]
@@ -514,19 +202,19 @@ def main():
         s = s + dis
         global_s.append(s)
 
-    s_dest=global_s[len(tx)-1]
-    run_frenet = True
-
-
+    params.s_dest=global_s[len(tx)-1]
     area = 20.0  # animation area length [m]
+    path= FrenetPath()
     path_msg= Path()
     global_path_msg= Path()
     while (rclpy.ok()):
-        path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob)
-        min_id=0
-        if (True):
-            min_id = initial_conditions_new(csp, global_s, tx, ty, tc, tyaw, s0, c_speed, c_d, c_d_d,c_d_dd, path)
-
+        params.min_id=0
+        if (False): # set to False since we dont have actual pose data durin testing
+            params.min_id = initial_conditions_new(csp, global_s, tx, ty, tc, tyaw, path)
+        if (params.s_dest - s0 <= params.LOOKAHEAD_DIST or s0 - params.s_dest >= 1):
+            params.STOP_CAR = True
+            params.TARGET_SPEED = 0.0
+        path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd)
 
         s0 = path.s[1]
         c_d = path.d[1]
@@ -534,7 +222,7 @@ def main():
         c_d_dd = path.d_dd[1]
         c_speed = path.s_d[1]
 
-        if np.hypot(path.x[1] - tx[-1], path.y[1] - ty[-1]) <= 1.0:
+        if (np.hypot(path.x[1] - tx[-1], path.y[1] - ty[-1]) <= 1.0)  :
             print("Goal")
             break
 
@@ -545,8 +233,8 @@ def main():
                 'key_release_event',
                 lambda event: [exit(0) if event.key == 'escape' else None])
             plt.plot(tx, ty)
-            if(ob != []):
-                plt.plot(ob[:, 0], ob[:, 1], "xk")
+            if(params.ob != []):
+                plt.plot(params.ob[:, 0], params.ob[:, 1], "xk")
             plt.plot(path.x[1:], path.y[1:], "-or")
             plt.plot(path.x[1], path.y[1], "vc")
             plt.xlim(path.x[1] - area, path.x[1] + area)
@@ -564,14 +252,14 @@ def main():
             global_path_msg.poses.append(loc)
         
         if (len(path.d) <= 1 or len(path.s_d) <= 1 or len(path.d_d) <= 1) :
-            bot_v = np.sqrt((1 - tc[min_id] * c_d)** 2 * (c_speed)** 2 + (c_d_d)** 2)
+            bot_v = np.sqrt((1 - tc[params.min_id] * c_d)** 2 * (c_speed)** 2 + (c_d_d)** 2)
         else :
-            if (STOP_CAR):
-                bot_v = calc_bot_v(path.get_d(), path.get_s_d(), path.get_d_d(),tc)
+            if (params.STOP_CAR):
+                bot_v = calc_bot_v(path.d, path.s_d, path.d_d,tc)
             else :
-                bot_v = np.sqrt(pow(1 - tc[min_id] * path.d[1], 2) * pow(path.s_d[1], 2) +
+                bot_v = np.sqrt(pow(1 - tc[params.min_id] * path.d[1], 2) * pow(path.s_d[1], 2) +
 							 pow(path.d_d[1], 2))
-        if (STOP_CAR):
+        if (params.STOP_CAR):
             print(bot_v)
         
         vel=Twist()
