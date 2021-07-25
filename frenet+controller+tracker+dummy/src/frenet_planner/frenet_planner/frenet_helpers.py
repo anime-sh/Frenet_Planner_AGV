@@ -193,13 +193,21 @@ def nearest_obs(point32):
 
     if it==0:
         if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS):
+            # ob_x.pop(it)
+            # ob_y.pop(it)
             return False
     elif it==len(ob_x):
         it = it-1
         if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS):
+            # ob_x.pop(it)
+            # ob_y.pop(it)
             return False
     else:
         if(calc_dis(p_x,p_y,ob_x[it],ob_y[it])<= params.OBSTACLE_RADIUS) and (calc_dis(p_x,p_y,ob_x[it-1],ob_y[it-1])> params.OBSTACLE_RADIUS):
+            # ob_x.pop(it)
+            # ob_y.pop(it)
+            # ob_x.pop(it-1)
+            # ob_y.pop(it-1)
             return False
 
     it = bisect.bisect_left(ob_y,p_y,lo = 0,hi = len(ob_y))
@@ -217,10 +225,44 @@ def nearest_obs(point32):
 
     return True
 
-# check for obstacles in a radius given by OBSTACLE_RADIUS around each vertice of transformed polygon
+# # check for obstacles in a radius given by OBSTACLE_RADIUS around each vertice of transformed polygon
+# def check_collision(fp):
+#     if(params.ob==[]):
+#         return True
+#     for i in range(min(len(fp.x),len(fp.yaw))):
+#         trans_footprint = transformation(params.footprint.polygon.points,params.odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
+#         for j in trans_footprint:
+#                 # for i in range(params.ob.shape[0]): #currently checks with every obstacle 
+#                 #     ix = j.x
+#                 #     iy = j.y
+#                 #     d = ((ix - params.ob[i, 0]) ** 2) + ((iy - params.ob[i, 1]) ** 2)
+#                 #     collision = (d <= params.OBSTACLE_RADIUS ** 2 )
+#                 #     if collision:
+#                 #         return False
+#                 collision = nearest_obs(j)
+#                 if not collision:
+#                     return False
+
+#     return True
+
+# faster check for obstacles in a radius given by OBSTACLE_RADIUS around 3 bounding circle centres
 def check_collision(fp):
     if(params.ob==[]):
         return True
+    triangle1 = Point32()
+    triangle2 = Point32()
+    triangle3 = Point32()
+    triangle3._x = 0.0
+    triangle3._y = 0.0 
+    triangle3._z = 0.0
+    triangle2._x = 1.0
+    triangle2._y = 0.0 
+    triangle2._z = 0.0
+    triangle1._x = 2.0
+    triangle1._y = 0.0
+    triangle1._z = 0.0
+
+    params.footprint.polygon.points = [triangle1,triangle2,triangle3]
     for i in range(min(len(fp.x),len(fp.yaw))):
         trans_footprint = transformation(params.footprint.polygon.points,params.odom.pose.pose,fp.x[i],fp.y[i],fp.yaw[i])
         for j in trans_footprint:
