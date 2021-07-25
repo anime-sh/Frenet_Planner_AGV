@@ -1,4 +1,5 @@
-Package changes introduced by Python Team:
+Package changes introduced by [Rohit Ranjan](https://github.com/thefurorjuror), [Himadri Bhatka](https://github.com/sirmisscriesalot) and [Roopsa Sen](https://github.com/RoopsaSen):
+
 https://docs.google.com/document/d/17ZuNeeWueda3P6K-k-E3gGrls1TsR9DtxKbyb-Hnjhc/edit?usp=sharing
 
 Running Instructions:
