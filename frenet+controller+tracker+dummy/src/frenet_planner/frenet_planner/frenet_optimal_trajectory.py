@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import rclpy
 from rclpy.node import Node
 import rclpy.parameter 
+import time
 
 # import messages
 from nav_msgs.msg import Path
@@ -124,7 +125,6 @@ class Frenet_Planner(Node):
             ('D_T_S', 0.0),
             ('N_S_SAMPLE', 0.0),
             ('OBSTACLE_RADIUS', 0.0),
-            ('MIN_LAT_VEL', 0.0),
             ('MAX_LAT_VEL', 0.0),
             ('D_D_NS', 0.0),
             ('W_X', [0.0,1.0]),
@@ -148,7 +148,6 @@ class Frenet_Planner(Node):
         params.D_T_S = self.get_parameter("D_T_S").get_parameter_value().double_value
         params.N_S_SAMPLE = self.get_parameter("N_S_SAMPLE").get_parameter_value().double_value
         params.OBSTACLE_RADIUS = self.get_parameter("OBSTACLE_RADIUS").get_parameter_value().double_value
-        params.MIN_LAT_VEL=self.get_parameter("MIN_LAT_VEL").get_parameter_value().double_value
         params.MAX_LAT_VEL=self.get_parameter("MAX_LAT_VEL").get_parameter_value().double_value
         params.D_D_NS=self.get_parameter("D_D_NS").get_parameter_value().double_value
         params.W_X = self.get_parameter("W_X").get_parameter_value().double_array_value
@@ -208,14 +207,19 @@ def main():
     path_msg= Path()
     global_path_msg= Path()
     while (rclpy.ok()):
+        start_main_loop= time.time()
         params.min_id=0
-        if (False): # set to False since we dont have actual pose data durin testing
+        if (False): # set to False since we dont have actual pose data during testing
             params.min_id = initial_conditions_new(csp, global_s, tx, ty, tc, tyaw, path)
         if (params.s_dest - s0 <= params.LOOKAHEAD_DIST or s0 - params.s_dest >= 1):
             params.STOP_CAR = True
             params.TARGET_SPEED = 0.0
+        start_path= time.time()
         path = frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd)
+        end_path=time.time()
+        print("Best path returned in: "+str(end_path -start_path))
 
+        # add time here
         s0 = path.s[1]
         c_d = path.d[1]
         c_d_d = path.d_d[1]
@@ -274,6 +278,8 @@ def main():
         frenet_planner.global_path.publish(global_path_msg)
         frenet_planner.target_vel.publish(vel)
         rclpy.spin_once(frenet_planner)
+        end_main_loop=time.time()
+        print("Main Loop time elapsed: "+str(end_main_loop -start_main_loop))
 
     print("Finish")
     if show_animation:  # pragma: no cover

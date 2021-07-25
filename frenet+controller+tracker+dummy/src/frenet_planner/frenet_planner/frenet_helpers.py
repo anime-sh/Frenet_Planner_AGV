@@ -4,6 +4,7 @@ import numpy as np
 import copy
 import math
 import bisect
+import time
 
 # import messages
 from nav_msgs.msg import Path
@@ -80,7 +81,7 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
     for di in np.arange(-params.MAX_ROAD_WIDTH, params.MAX_ROAD_WIDTH, params.D_ROAD_W):
         # Lateral motion planning
         for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT):
-            for Di_d in np.arange(params.MIN_LAT_VEL,params.MAX_LAT_VEL,params.D_D_NS):
+            for Di_d in np.arange(-params.MAX_LAT_VEL,params.MAX_LAT_VEL+0.001,params.D_D_NS):
                 fp = FrenetPath()
 
                 lat_qp = QuinticPolynomial(c_d, c_d_d, c_d_dd, di, Di_d, 0.0, Ti)
@@ -326,59 +327,21 @@ def generate_target_course(x, y):
 
     return rx, ry, ryaw, rk, csp
 
-# # nearest in global path
-# # functionality imitated from cpp codebase
-# def find_nearest_in_global_path(global_x, global_y, flag,path):
-#     global min_x
-#     global min_y
-#     global min_dis
-#     if (flag == 0):
-#         bot_x = params.odom.pose.pose.position.x
-#         bot_y = params.odom.pose.pose.position.y
-#     else:
-#         bot_x = path.get_x()[1]
-#         bot_y = path.get_y()[1]
-#     min_dis = params.FLT_MAX
-#     for i in range(len(global_x)):
-#         dis = calc_dis(global_x[i], global_y[i], bot_x, bot_y)
-#         if (dis < min_dis):
-#             min_dis = dis
-#             min_x = global_x[i]
-#             min_y = global_y[i]
-#             params.min_id = i
-
-# # functionality imitated from cpp codebase
-# def initial_conditions_new(csp, global_s, global_x, global_y,global_R, global_yaw, s0, c_speed, c_d,c_d_d,c_d_dd, path):
-#     vx = params.odom.twist.twist.linear.x
-#     vy = params.odom.twist.twist.linear.y
-#     v = np.sqrt(vx * vx + vy * vy)
-
-#     find_nearest_in_global_path(global_x, global_y, 0, path)
-
-#     vec1=[0,0]
-#     vec2=[0,0]
-#     vec1[0] = params.odom.pose.pose.position.x - global_x[params.min_id]
-#     vec1[1] = params.odom.pose.pose.position.y - global_y[params.min_id]
-#     vec2[0] = global_x[params.min_id] - global_x[params.min_id + 1]
-#     vec2[1] = global_y[params.min_id] - global_y[params.min_id + 1]
-#     curl2D = vec1[0] * vec2[1] - vec2[0] * vec1[1]
-#     if (curl2D < 0):
-#         c_d =c_d*-1
-#     s0 = global_s[params.min_id]
-#     _,_,bot_yaw = euler_from_quaternion(params.odom.pose.pose.orientation.x,params.odom.pose.pose.orientation.y,params.odom.pose.pose.orientation.z,params.odom.pose.pose.orientation.w)
-#     g_path_yaw = global_yaw[params.min_id]
-#     delta_theta = bot_yaw - g_path_yaw
-#     c_d_d = v * np.sin(delta_theta)
-#     k_r = global_R[params.min_id]
-#     c_speed = v * np.cos(delta_theta) / (1 - k_r * c_d)
-#     c_d_dd = 0
-#     return params.min_id
-
 # calculate best_path between start and end states
 def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd):
+    start_calc_frenet=time.time()
     fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0)
+    end_calc_frenet=time.time()
+    print("calc_frenet_paths time elapsed: "+str(end_calc_frenet -start_calc_frenet))
+    start_calc_global=time.time()
     fplist = calc_global_paths(fplist, csp)
+    end_calc_global=time.time()
+    print("calc_global_paths time elapsed: "+str(end_calc_global -start_calc_global))
+    start_check_path=time.time()
     fplist = check_paths(fplist)
+    end_check_path=time.time()
+    print("check_path time elapsed: "+str(end_check_path -start_check_path))
+
 
     # find minimum cost path
     min_cost = params.FLT_MAX
