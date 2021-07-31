@@ -43,7 +43,7 @@ class FrenetPath:
         self.yaw = []
         self.ds = []
         self.c = []
-
+    
 # # calculate list of frenet paths given start and end states
 def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
     frenet_paths = []
@@ -58,61 +58,60 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
 def calc_frenet_path_stop(di,Ti,c_speed, c_d, c_d_d, c_d_dd, s0):
     fp = FrenetPath()
     lat_qp = QuinticPolynomial(c_d, c_d_d, c_d_dd, di, 0.0, 0.0, Ti)
-    fp.t = [t for t in np.arange(0.0, Ti, params.DT)]
-    fp.d = [lat_qp.calc_point(t) for t in fp.t]
-    fp.d_d = [lat_qp.calc_first_derivative(t) for t in fp.t]
-    fp.d_dd = [lat_qp.calc_second_derivative(t) for t in fp.t]
-    fp.d_ddd = [lat_qp.calc_third_derivative(t) for t in fp.t]
 
-    tfp = copy.deepcopy(fp)
+    fp.t = np.arange(0.0, Ti, params.DT)
+    fp.d = lat_qp.calc_point(fp.t) 
+    fp.d_d = lat_qp.calc_first_derivative(fp.t) 
+    fp.d_dd = lat_qp.calc_second_derivative(fp.t) 
+    fp.d_ddd = lat_qp.calc_third_derivative(fp.t)
+
     lon_qp = QuinticPolynomial(s0, c_speed, 0.0, min(s0+params.LOOKAHEAD_DIST,params.s_dest),params.TARGET_SPEED, 0.0, Ti)
-    tfp.s = [lon_qp.calc_point(t) for t in fp.t]
-    tfp.s_d = [lon_qp.calc_first_derivative(t) for t in fp.t]
-    tfp.s_dd = [lon_qp.calc_second_derivative(t) for t in fp.t]
-    tfp.s_ddd = [lon_qp.calc_third_derivative(t) for t in fp.t]
+    fp.s = lon_qp.calc_point(fp.t) 
+    fp.s_d = lon_qp.calc_first_derivative(fp.t) 
+    fp.s_dd = lon_qp.calc_second_derivative(fp.t) 
+    fp.s_ddd = lon_qp.calc_third_derivative(fp.t) 
 
-    Jp = sum(np.power(tfp.d_ddd, 2))  # square of jerk
-    Js = sum(np.power(tfp.s_ddd, 2))  # square of jerk
+    Jp = sum(np.power(fp.d_ddd, 2))  # square of jerk
+    Js = sum(np.power(fp.s_ddd, 2))  # square of jerk
 
     # square of diff from target speed
-    ds = (params.TARGET_SPEED - tfp.s_d[-1]) ** 2
+    ds = (params.TARGET_SPEED - fp.s_d[-1]) ** 2
 
-    tfp.cd = params.K_J * Jp + params.K_T * Ti + params.K_D * tfp.d[-1] ** 2
-    tfp.cv = params.K_J * Js + params.K_T * Ti + params.K_D * ds
-    tfp.cf = params.K_LAT * tfp.cd + params.K_LON * tfp.cv
-    # print(tfp.s)
-    return tfp
+    fp.cd = params.K_J * Jp + params.K_T * Ti + params.K_D * fp.d[-1] ** 2
+    fp.cv = params.K_J * Js + params.K_T * Ti + params.K_D * ds
+    fp.cf = params.K_LAT * fp.cd + params.K_LON * fp.cv
+
+    return fp
 
 def calc_frenet_path_non_stop(di,Ti,Di_d,tv,c_speed, c_d, c_d_d, c_d_dd, s0):
     fp = FrenetPath()
 
     lat_qp = QuinticPolynomial(c_d, c_d_d, c_d_dd, di, Di_d, 0.0, Ti)
 
-    fp.t = [t for t in np.arange(0.0, Ti, params.DT)]
-    fp.d = [lat_qp.calc_point(t) for t in fp.t]
-    fp.d_d = [lat_qp.calc_first_derivative(t) for t in fp.t]
-    fp.d_dd = [lat_qp.calc_second_derivative(t) for t in fp.t]
-    fp.d_ddd = [lat_qp.calc_third_derivative(t) for t in fp.t]
-
-    tfp = copy.deepcopy(fp)
+    fp.t = np.arange(0.0, Ti, params.DT)
+    fp.d = lat_qp.calc_point(fp.t)
+    fp.d_d = lat_qp.calc_first_derivative(fp.t) 
+    fp.d_dd = lat_qp.calc_second_derivative(fp.t) 
+    fp.d_ddd = lat_qp.calc_third_derivative(fp.t) 
+    
     lon_qp = QuinticPolynomial(s0, c_speed, 0.0, s0+params.LOOKAHEAD_DIST,tv, 0.0, Ti)
 
-    tfp.s = [lon_qp.calc_point(t) for t in fp.t]
-    tfp.s_d = [lon_qp.calc_first_derivative(t) for t in fp.t]
-    tfp.s_dd = [lon_qp.calc_second_derivative(t) for t in fp.t]
-    tfp.s_ddd = [lon_qp.calc_third_derivative(t) for t in fp.t]
+    fp.s = lon_qp.calc_point(fp.t) 
+    fp.s_d = lon_qp.calc_first_derivative(fp.t) 
+    fp.s_dd = lon_qp.calc_second_derivative(fp.t) 
+    fp.s_ddd = lon_qp.calc_third_derivative(fp.t) 
 
-    Jp = sum(np.power(tfp.d_ddd, 2))  # square of jerk
-    Js = sum(np.power(tfp.s_ddd, 2))  # square of jerk
+    Jp = sum(np.power(fp.d_ddd, 2))  # square of jerk
+    Js = sum(np.power(fp.s_ddd, 2))  # square of jerk
 
     # square of diff from target speed
-    ds = (params.TARGET_SPEED - tfp.s_d[-1]) ** 2
+    ds = (params.TARGET_SPEED - fp.s_d[-1]) ** 2
 
-    tfp.cd = params.K_J * Jp + params.K_T * Ti + params.K_D * tfp.d[-1] ** 2
-    tfp.cv = params.K_J * Js + params.K_T * Ti + params.K_D * ds
-    tfp.cf = params.K_LAT * tfp.cd + params.K_LON * tfp.cv
+    fp.cd = params.K_J * Jp + params.K_T * Ti + params.K_D * fp.d[-1] ** 2
+    fp.cv = params.K_J * Js + params.K_T * Ti + params.K_D * ds
+    fp.cf = params.K_LAT * fp.cd + params.K_LON * fp.cv
 
-    return tfp
+    return fp
 
 
 # convert frenet paths to global frame
@@ -284,9 +283,9 @@ def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd):
     else: keyfun= operator.attrgetter("cf") # use operator since it's faster than lambda
 
     fplist.sort(key=keyfun, reverse=False) # sort in-place
-
+    start_calc_global=time.time()
     for fp in fplist:
-        start_calc_global=time.time()
+        
         fp = calc_global_paths(fp, csp)
         if check_paths(fp):
             end_calc_global=time.time()
