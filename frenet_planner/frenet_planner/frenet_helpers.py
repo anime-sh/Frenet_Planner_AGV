@@ -43,76 +43,84 @@ class FrenetPath:
         self.yaw = []
         self.ds = []
         self.c = []
-    
-# # calculate list of frenet paths given start and end states
-def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
-    frenet_paths = []
-    if (params.STOP_CAR): 
-        frenet_paths=Parallel(n_jobs=1)(delayed(calc_frenet_path_stop)(di,Ti,c_speed, c_d, c_d_d, c_d_dd, s0) for di in np.arange(-params.MAX_ROAD_WIDTH, params.MAX_ROAD_WIDTH, params.D_ROAD_W) for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT) )
-        return frenet_paths
+        self.Jp=0.0
+        self.Js=0.0
+        self.dss=0.0
+        self.Ti=0.0
 
-    # generate path to each offset goal
-    frenet_paths=Parallel(n_jobs=mp.cpu_count())(delayed(calc_frenet_path_non_stop)(di,Ti,Di_d,tv,c_speed, c_d, c_d_d, c_d_dd, s0) for di in np.arange(-params.MAX_ROAD_WIDTH, params.MAX_ROAD_WIDTH, params.D_ROAD_W) for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT) for Di_d in np.arange(-params.MAX_LAT_VEL,params.MAX_LAT_VEL+0.001,params.D_D_NS) for tv in np.arange(params.TARGET_SPEED - params.D_T_S * params.N_S_SAMPLE,params.TARGET_SPEED + params.D_T_S * params.N_S_SAMPLE, params.D_T_S)) 
-    return frenet_paths
+class Fplist:
+    def __init__(self,c_speed, c_d, c_d_d, c_d_dd, s0):
+        self.c_speed= c_speed
+        self.c_d= c_d
+        self.c_d_d= c_d_d
+        self.c_d_dd= c_d_dd
+        self.s0= s0
+        self.fplist_lat =[]
+        self.fplist_lon =[]
+        self.samples_tv = len(np.arange(params.TARGET_SPEED - params.D_T_S * params.N_S_SAMPLE,params.TARGET_SPEED + params.D_T_S * params.N_S_SAMPLE, params.D_T_S))
 
-def calc_frenet_path_stop(di,Ti,c_speed, c_d, c_d_d, c_d_dd, s0):
-    fp = FrenetPath()
-    lat_qp = QuinticPolynomial(c_d, c_d_d, c_d_dd, di, 0.0, 0.0, Ti)
+        if (params.STOP_CAR): 
+            self.fplist_lat=Parallel(n_jobs=1)(delayed(self.calc_lat)(di,Ti,0.0) for di in np.arange(-params.MAX_ROAD_WIDTH, params.MAX_ROAD_WIDTH, params.D_ROAD_W) for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT))
+        else :
+            self.fplist_lat=Parallel(n_jobs=1)(delayed(self.calc_lat)(di,Ti,Di_d) for di in np.arange(-params.MAX_ROAD_WIDTH, params.MAX_ROAD_WIDTH, params.D_ROAD_W) for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT) for Di_d in np.arange(-params.MAX_LAT_VEL,params.MAX_LAT_VEL+0.001,params.D_D_NS))
+            
+        if (params.STOP_CAR): 
+            self.fplist_lon=Parallel(n_jobs=1)(delayed(self.calc_lon)(params.TARGET_SPEED,Ti) for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT))
+        else:
+            self.fplist_lon=Parallel(n_jobs=1)(delayed(self.calc_lon)(tv,Ti) for tv in np.arange(params.TARGET_SPEED - params.D_T_S * params.N_S_SAMPLE,params.TARGET_SPEED + params.D_T_S * params.N_S_SAMPLE, params.D_T_S) for Ti in np.arange(params.MIN_T, params.MAX_T, params.DT))
+        
+        self.fplist_lat = list(np.repeat(self.fplist_lat, self.samples_tv))
+        
+        try: import operator
+        except ImportError: keyfun= lambda x: x.Ti # use a lambda if no operator module
+        else: keyfun= operator.attrgetter("Ti") # use operator since it's faster than lambda
+        self.fplist_lon.sort(key=keyfun, reverse=False) # sort in-place
+        
+        Parallel(n_jobs=1)(delayed(self.copy)(i) for i in np.arange(0,len(self.fplist_lat),self.samples_tv))
+        Parallel(n_jobs=1)(delayed(self.calc_cost)(i) for i in range(len(self.fplist_lat)))
 
-    fp.t = np.arange(0.0, Ti, params.DT)
-    fp.d = lat_qp.calc_point(fp.t) 
-    fp.d_d = lat_qp.calc_first_derivative(fp.t) 
-    fp.d_dd = lat_qp.calc_second_derivative(fp.t) 
-    fp.d_ddd = lat_qp.calc_third_derivative(fp.t)
+    def calc_lat(self,di,Ti,Di_d):
+        fp = FrenetPath()
+        lat_qp = QuinticPolynomial(self.c_d, self.c_d_d, self.c_d_dd, di, Di_d, 0.0, Ti)
 
-    lon_qp = QuinticPolynomial(s0, c_speed, 0.0, min(s0+params.LOOKAHEAD_DIST,params.s_dest),params.TARGET_SPEED, 0.0, Ti)
-    fp.s = lon_qp.calc_point(fp.t) 
-    fp.s_d = lon_qp.calc_first_derivative(fp.t) 
-    fp.s_dd = lon_qp.calc_second_derivative(fp.t) 
-    fp.s_ddd = lon_qp.calc_third_derivative(fp.t) 
+        fp.Ti=Ti
+        fp.t = np.arange(0.0, Ti, params.DT)
+        fp.d = lat_qp.calc_point(fp.t)
+        fp.d_d = lat_qp.calc_first_derivative(fp.t) 
+        fp.d_dd = lat_qp.calc_second_derivative(fp.t) 
+        fp.d_ddd = lat_qp.calc_third_derivative(fp.t) 
+        fp.Jp =  np.sum(np.power(fp.d_ddd, 2))
+        fp.cd = params.K_J * fp.Jp + params.K_T * fp.Ti + params.K_D * fp.d[-1] ** 2
+        return fp
 
-    Jp = sum(np.power(fp.d_ddd, 2))  # square of jerk
-    Js = sum(np.power(fp.s_ddd, 2))  # square of jerk
+    def calc_lon(self,tv,Ti):
+        fp = FrenetPath() 
+        lon_qp = QuinticPolynomial(self.s0, self.c_speed, 0.0, min(self.s0+params.LOOKAHEAD_DIST,params.s_dest),tv, 0.0, Ti)
+        
+        fp.Ti=Ti
+        fp.t = np.arange(0.0, Ti, params.DT)
+        fp.s = lon_qp.calc_point(fp.t) 
+        fp.s_d = lon_qp.calc_first_derivative(fp.t) 
+        fp.s_dd = lon_qp.calc_second_derivative(fp.t) 
+        fp.s_ddd = lon_qp.calc_third_derivative(fp.t) 
+        fp.Js =  np.sum(np.power(fp.s_ddd, 2))
+        fp.dss= (params.TARGET_SPEED - fp.s_d[-1]) ** 2
+        fp.cv = params.K_J * fp.Js + params.K_T * fp.Ti + params.K_D * fp.dss
+        return fp
 
-    # square of diff from target speed
-    ds = (params.TARGET_SPEED - fp.s_d[-1]) ** 2
+    def copy(self,i):
+        index_start = int(((self.fplist_lat[i]).Ti - params.MIN_T) * self.samples_tv)
+        for j in range(self.samples_tv):
+            self.fplist_lat[i+j].s = self.fplist_lon[index_start+j].s
+            self.fplist_lat[i+j].s_d = self.fplist_lon[index_start+j].s_d
+            self.fplist_lat[i+j].s_dd = self.fplist_lon[index_start+j].s_dd
+            self.fplist_lat[i+j].s_ddd = self.fplist_lon[index_start+j].s_ddd
+            self.fplist_lat[i+j].Js = self.fplist_lon[index_start+j].Js
+            self.fplist_lat[i+j].dss = self.fplist_lon[index_start+j].dss
+            self.fplist_lat[i+j].cv = self.fplist_lon[index_start+j].cv
 
-    fp.cd = params.K_J * Jp + params.K_T * Ti + params.K_D * fp.d[-1] ** 2
-    fp.cv = params.K_J * Js + params.K_T * Ti + params.K_D * ds
-    fp.cf = params.K_LAT * fp.cd + params.K_LON * fp.cv
-
-    return fp
-
-def calc_frenet_path_non_stop(di,Ti,Di_d,tv,c_speed, c_d, c_d_d, c_d_dd, s0):
-    fp = FrenetPath()
-
-    lat_qp = QuinticPolynomial(c_d, c_d_d, c_d_dd, di, Di_d, 0.0, Ti)
-
-    fp.t = np.arange(0.0, Ti, params.DT)
-    fp.d = lat_qp.calc_point(fp.t)
-    fp.d_d = lat_qp.calc_first_derivative(fp.t) 
-    fp.d_dd = lat_qp.calc_second_derivative(fp.t) 
-    fp.d_ddd = lat_qp.calc_third_derivative(fp.t) 
-    
-    lon_qp = QuinticPolynomial(s0, c_speed, 0.0, s0+params.LOOKAHEAD_DIST,tv, 0.0, Ti)
-
-    fp.s = lon_qp.calc_point(fp.t) 
-    fp.s_d = lon_qp.calc_first_derivative(fp.t) 
-    fp.s_dd = lon_qp.calc_second_derivative(fp.t) 
-    fp.s_ddd = lon_qp.calc_third_derivative(fp.t) 
-
-    Jp = sum(np.power(fp.d_ddd, 2))  # square of jerk
-    Js = sum(np.power(fp.s_ddd, 2))  # square of jerk
-
-    # square of diff from target speed
-    ds = (params.TARGET_SPEED - fp.s_d[-1]) ** 2
-
-    fp.cd = params.K_J * Jp + params.K_T * Ti + params.K_D * fp.d[-1] ** 2
-    fp.cv = params.K_J * Js + params.K_T * Ti + params.K_D * ds
-    fp.cf = params.K_LAT * fp.cd + params.K_LON * fp.cv
-
-    return fp
-
+    def calc_cost(self,i):
+        self.fplist_lat[i].cf = params.K_LAT * self.fplist_lat[i].cd + params.K_LON * self.fplist_lat[i].cv
 
 # convert frenet paths to global frame
 def calc_global_paths(fp, csp):
@@ -274,7 +282,7 @@ def generate_target_course(x, y):
 # calculate best_path between start and end states
 def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd):
     start_calc_frenet=time.time()
-    fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0)
+    fplist = Fplist(c_speed, c_d, c_d_d, c_d_dd, s0).fplist_lat
     end_calc_frenet=time.time()
     print("calc_frenet_paths time elapsed: "+str(end_calc_frenet -start_calc_frenet))
 
