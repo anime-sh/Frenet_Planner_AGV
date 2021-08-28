@@ -88,8 +88,8 @@ obstacle_layer:
 #  laser_centre: {sensor_frame: center_laser_link, data_type: PointCloud, clearing: true, marking: true, topic: /prius/center_laser/scan, inf_is_valid: true}
 
  observation_sources: laser_scan_sensor laser1_scan_sensor
- laser_scan_sensor: {sensor_frame: front_right_laser_link, data_type: LaserScan, topic: scan_filtered_right , marking: true, clearing: true}
- laser1_scan_sensor: {sensor_frame: front_left_laser_link, data_type: LaserScan, topic: scan_filtered_left , marking: true, clearing: true}
+ laser_scan_sensor: {sensor_frame: front_right_laser_link, data_type: LaserScan, topic: /scan_filtered_right , marking: true, clearing: true}
+ laser1_scan_sensor: {sensor_frame: front_left_laser_link, data_type: LaserScan, topic: /scan_filtered_left , marking: true, clearing: true}
  
 inflation_layer:
   enabled:              true
@@ -98,4 +98,4 @@ inflation_layer:
 
 static_layer:
   enabled:              false
-  map_topic:            "map"
+  map_topic:            "/map"

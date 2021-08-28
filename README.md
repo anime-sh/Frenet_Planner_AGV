@@ -1,14 +1,30 @@
 # Frenet_Planner_AGV
-This repository improves upon the work done previously on the sampling based planners in frenet frame. The improvements were done by [Parv Maheshwari](https://github.com/Parv-Maheshwari) and [Animesh Jha](https://github.com/anime-sh).
+This repository improves upon the work done previously on the sampling based planners in frenet frame. The improvements were done by [Parv Maheshwari](https://github.com/Parv-Maheshwari), [Animesh Jha](https://github.com/anime-sh), [Rohit Ranjan](https://github.com/thefurorjuror), [Himadri Bhatka](https://github.com/sirmisscriesalot) and [Aayush Jain](https://github.com/Aayush-Jain01).
 
 ## Changes and improvements
+### Version 2.0 
+#### Contributors
+[Rohit Ranjan](https://github.com/thefurorjuror), [Himadri Bhatka](https://github.com/sirmisscriesalot) and [Aayush Jain](https://github.com/Aayush-Jain01)
+#### Changes and Results
 Here is a brief summary of the changes and improvements made in the planner:
-* ROS Melodic and Gazebo 9 compatibility added
-* Provisions for stopping the car have been added 
-* Reduced the time spent on generating a path (by 5-6 times) through parallel processing and other optimisations
-* Fixed the issue of ghost obstacles caused due to faulty lidar data processing by car_demo
+* Sorting based on path cost introduced. Sampled paths are now checked for collision in ascending order of path cost.
+* New class Fplist introduced.
+* Fplist class reduces redundancy of repetitive polynomial sampling and provides efficient memory transactions.   
+* Average frequency of over 25 Hz achieved.
 
-A short [video](https://youtu.be/BPBGQtXIR2Q) of a demo run 
+A short [video](https://youtu.be/8txINQdnBJU) of a demo run.
+### Version 1.0 
+#### Contributors
+[Parv Maheshwari](https://github.com/Parv-Maheshwari) and [Animesh Jha](https://github.com/anime-sh)
+#### Changes and Results
+Here is a brief summary of the changes and improvements made in the planner:
+* ROS Melodic and Gazebo 9 compatibility added.
+* Provisions for stopping the car have been added.
+* Reduced the time spent on generating a path (by 5-6 times) through parallel processing and other optimisations.
+* Average frequency of over 5 Hz achieved.
+* Fixed the issue of ghost obstacles caused due to faulty lidar data processing by car_demo.
+
+A short [video](https://youtu.be/BPBGQtXIR2Q) of a demo run.  
 # Frenet Planner ROS (Readme of the original repo)
 
 ## Introduction
