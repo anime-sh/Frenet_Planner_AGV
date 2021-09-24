@@ -1,9 +1,10 @@
-Code Documentation
+Classes and Functions
 ==================
+All classes and helper functions are documented here
 
 .. toctree::
    :maxdepth: 2
-   :caption: Classes and Functions :
-   frenetpath.rst
-   fplist.rst
-   helper.rst
+   :caption: Code Documentation:
+   ./frenetpath.rst
+   ./fplist.rst
+   ./helper.rst
