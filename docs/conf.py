@@ -13,16 +13,16 @@
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-sys.path.append(os.path.abspath('./graph_ltpl'))
+sys.path.append(os.path.abspath('./frenet_planner_agv'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Graph-Based Local Trajectory Planner'
-copyright = '2021, Tim Stahl'
-author = 'Tim Stahl'
+project = 'Frenet Planner AGV'
+copyright = '2021,AGV'
+author = 'AGV Planning Module'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.2'
+release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -74,10 +74,10 @@ def run_apidoc(_):
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
     # specify path where the source files should be placed
-    source_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "graph_ltpl")
+    source_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "frenet_planner_agv")
 
     # specify path of the module to be documented
-    module_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "..", "graph_ltpl")
+    module_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "..", "frenet_planner_agv")
 
     # call apidoc main
     main(['-e', '-o', source_dir, module_dir, '--force'])
