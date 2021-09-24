@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   std_msgs
   cmake_modules
-  costmap_converter 
+  #costmap_converter 
   base_local_planner
   message_generation
   nav_core
