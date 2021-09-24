@@ -55,37 +55,21 @@ Contents
    software/splines.rst
    software/planner.rst
 
-.. note:: Further details about the actual implementation and the purpose of individual functions can be found in the
-    :doc:`graph_ltpl/modules`.
-
-
 .. toctree::
    :maxdepth: 2
    :caption: Code Documentaion:
 
-   graph_ltpl/modules.rst
+   code/documentation.rst
 
 
 Contributions
 =============
-[1] T. Stahl, A. Wischnewski, J. Betz, and M. Lienkamp,
-“Multilayer Graph-Based Trajectory Planning for Race Vehicles in Dynamic Scenarios,”
-in 2019 IEEE Intelligent Transportation Systems Conference (ITSC), Oct. 2019, pp. 3149–3154.
-`(view pre-print) <https://arxiv.org/pdf/2005.08664>`_
+Werling, Moritz, Julius Ziegler, Sören Kammel, and Sebastian Thrun. "Optimal trajectory generation for dynamic street scenarios in a frenet frame." In 2010 IEEE International Conference on Robotics and Automation, pp. 987-993. IEEE, 2010.
+`(view pre-print) <https://ieeexplore.ieee.org/abstract/document/5509799/>`_
 
-If you find our work useful in your research, please consider citing:
 
-.. code-block:: latex
-
-   @inproceedings{stahl2019,
-     title = {Multilayer Graph-Based Trajectory Planning for Race Vehicles in Dynamic Scenarios},
-     booktitle = {2019 IEEE Intelligent Transportation Systems Conference (ITSC)},
-     author = {Stahl, Tim and Wischnewski, Alexander and Betz, Johannes and Lienkamp, Markus},
-     year = {2019},
-     pages = {3149--3154}
-   }
 
 Contact Information
 ===================
 
-:Email: `tim.stahl@tum.de <tim.stahl@tum.de>`_
+:Email: `agv@iitkgp.ac.in <agv@iitkgp.ac.in>`_
