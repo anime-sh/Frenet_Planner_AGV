@@ -65,7 +65,7 @@ Contents
 Contributions
 =============
 Werling, Moritz, Julius Ziegler, Sören Kammel, and Sebastian Thrun. "Optimal trajectory generation for dynamic street scenarios in a frenet frame." In 2010 IEEE International Conference on Robotics and Automation, pp. 987-993. IEEE, 2010.
-`(view pre-print) <https://ieeexplore.ieee.org/abstract/document/5509799/>`_
+`(view the paper) <https://ieeexplore.ieee.org/abstract/document/5509799/>`_
 
 
 
