@@ -40,7 +40,6 @@ Contents
    :maxdepth: 2
    :caption: Getting Started:
 
-   start/overview.rst
    start/installation.rst
    start/launching.rst
 
@@ -49,8 +48,7 @@ Contents
    :caption: Software Explanation:
    :glob:
 
-   software/config.rst   
-   software/logs.rst   
+   software/config.rst     
    software/polynomials.rst
    software/splines.rst
    software/planner.rst
