@@ -8,4 +8,4 @@ All classes and helper functions are documented here
    
    content/frenetpath.rst
    content/fplist.rst
-   content/helper.rst
+   content/helpers.rst
