@@ -17,13 +17,12 @@ Dependencies
 
 Based on whether you have Ubuntu 16 or 18, the packages you require changes. The first options are for Ubuntu 16.04 while the 2nd ones are for Ubuntu 18.04
 
-* ROS Kinetic/Melodic
-* Gazebo 8/9
-* car_demo 8/9
+* ROS Melodic
+* Gazebo 9
+* car_demo 9
 
 Installation tutorials for ROS
 
-* `http://wiki.ros.org/kinetic/Installation/Ubuntu <http://http://wiki.ros.org/kinetic/Installation/Ubuntu>`_
 * `http://wiki.ros.org/melodic/Installation/Ubuntu <http://http://wiki.ros.org/melodic/Installation/Ubuntu>`_
 
 After ROS has been set up run the following commands (The given commands are for ROS Melodic) -
