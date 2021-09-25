@@ -10,3 +10,4 @@ All classes and helper functions are documented here
    content/fplist.rst
    content/helpers.rst
    content/polynomials.rst
+   content/splines.rst
