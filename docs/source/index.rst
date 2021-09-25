@@ -29,8 +29,10 @@ There are a lot of cases that require dynamic consideration of other traffic par
 Heuristics based planners sort all these quite easily. But in cases of time sparsity these planners don't perform well. So there in comes the concept of taking time **'t'** into consideration at planning & execution level. This is what the planner handles through taking maneuver time into account in sampling.  
 
 A video of the test run can be found `here <https://youtu.be/UnL6ZROvW4s>`_.
+
 .. image:: /figures/Title_2.png
   :alt: Simulator Run Image
+  
 .. warning::
    This software is provided *as-is* and has not been subject to a certified safety validation. Autonomous Driving is a
    highly complex and dangerous task. In case you plan to use this software on a vehicle, it is by all means required
