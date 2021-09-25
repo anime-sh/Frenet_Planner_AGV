@@ -15,7 +15,7 @@ Open a terminal inside the folder in which you have git cloned the repo. Source 
 Dependencies
 ================
 
-Based on whether you have Ubuntu 16 or 18, the packages you require changes. The first options are for Ubuntu 16.04 while the 2nd ones are for Ubuntu 18.04
+The following dependencies are required for Ubuntu 18.04 .
 
 * ROS Melodic
 * Gazebo 9
