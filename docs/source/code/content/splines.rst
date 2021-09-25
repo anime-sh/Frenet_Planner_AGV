@@ -1,5 +1,5 @@
 *****************************
-cubic_spline_planner.cpp
+Class Spline2D
 *****************************
 calc_A
 ^^^^^^^
