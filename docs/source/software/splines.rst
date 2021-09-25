@@ -1,4 +1,3 @@
-
 Splines
 =======
 A spline is an aggregation of several piecewise functions that is used to fit a smooth curve(approximately) passing through several vector/data points.
@@ -16,27 +15,27 @@ Key Properties of Cubic Splines
 
 Calculating A Cubic Spline 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-A cubic spline is basically made up of piecewise cubic polynomials each satisfying the interval and the endpoints of the interval they are defined in.
+A cubic spline is made up of piecewise cubic polynomials each satisfying the interval and the endpoints of the interval they are defined in.
 
 Let's say there are n + 1 points (x0, y0), (x1, y1), (x, y2) ....... (xn, yn)
 
-We want to fit a cubic spline through these n+1 points or we can say that we need to find n cubic equations that make up the spline iver these n-intervals 
+We want to fit a cubic spline through these n+1 points or we can say that we need to find n cubic equations that make up the spline over these n-intervals 
 
-Any cubic equation passing through a point x_i, y_i can be written in the form :-
+Any cubic equation passing through a point x_i, y_i can be written in the form :
 
 y_i = a + b(x - x_i) + c(x-x_i)² + d(x-x_i)³
 
-Here we have 4 unknowns for one cubic equation.So for n cubic equations we will have 4n unknowns
+Here we have 4 unknowns for one cubic equation. So for n cubic equations, we will have 4n unknowns
 
 As cubic splines satisfy certain properties, they serve as constraints for these unknowns 
 
-1.The spline passes through all the n+1 points hence it satisfies y0, y1, .... yn. These are n+1 constraints
+1. The spline passes through all the n+1 points hence it satisfies y0, y1, .... yn. These are n+1 constraints
 
-2.The spline is continuous at all the points(except end points) so we have additional n-1 constraints
+2. The spline is continuous at all the points(except end-points) so we have additional n-1 constraints
 
-3.The first and second derivatives of the spline are also continuous at these n-1 points hence we have 2(n-1)more constraints
+3. The first and second derivatives of the spline are also continuous at these n-1 points hence we have 2(n-1)more constraints
 
-In total we have 4n-2 constraints and 4n unknowns till now. This is a under-determined system so to make it solvable two additional constraints are enforced externally (generally that the second derivative = 0 at the end-points)
+In total, we have 4n-2 constraints and 4n unknowns till now. This is an under-determined system so to make it solvable two additional constraints are enforced externally (generally that the second derivative = 0 at the end-points)
 
 Spline Representation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -56,3 +55,4 @@ References
 http://www.cs.cornell.edu/courses/cs4620/2013fa/lectures/16spline-curves.pdf
 
 https://en.wikipedia.org/wiki/Spline_(mathematics)
+
