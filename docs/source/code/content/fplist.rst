@@ -1,8 +1,10 @@
+============
 Class Fplist
 ============
 ****************
 Member Variables
 ****************
+
 c_speed
 ^^^^^^^
     current longitudinal speed of the ego vehicle
@@ -27,9 +29,11 @@ fplist_lon
     samples_tv
 ^^^^^^^^^^
     number of samples at each time value
+    
 ****************
 Member Functions
 ****************
+
 Fplist (Constructor)
 ^^^^^^^^^^^^^^^^^^^^
     - Argument : double, double, double, double, double
