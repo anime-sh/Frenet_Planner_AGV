@@ -179,6 +179,7 @@ class Frenet_Planner(Node):
         params.ob = np.column_stack((np.array(ob_x), np.array(ob_y)))
 
 def main():
+    start_total_time=time.time()
     gotOdom = False
     print(__file__ + " start!!")
 
@@ -206,7 +207,9 @@ def main():
     path= FrenetPath()
     path_msg= Path()
     global_path_msg= Path()
+    ccc=0
     while (rclpy.ok()):
+        ccc+=1
         start_main_loop= time.time()
         params.min_id=0
         if (False): # set to False since we dont have actual pose data during testing
@@ -230,6 +233,15 @@ def main():
             print("Goal")
             break
 
+        if (len(path.d) <= 1 or len(path.s_d) <= 1 or len(path.d_d) <= 1) :
+            bot_v = np.sqrt((1 - tc[params.min_id] * c_d)** 2 * (c_speed)** 2 + (c_d_d)** 2)
+        else :
+            if (params.STOP_CAR):
+                bot_v = calc_bot_v(path.d, path.s_d, path.d_d,tc)
+            else :
+                bot_v = np.sqrt(pow(1 - tc[params.min_id] * path.d[1], 2) * pow(path.s_d[1], 2) +
+							 pow(path.d_d[1], 2))
+
         if show_animation:  # pragma: no cover
             plt.cla()
             # for stopping simulation with the esc key.
@@ -243,7 +255,7 @@ def main():
             plt.plot(path.x[1], path.y[1], "vc")
             plt.xlim(path.x[1] - area, path.x[1] + area)
             plt.ylim(path.y[1] - area, path.y[1] + area)
-            plt.title("v[km/h]:" + str(c_speed * 3.6)[0:4])
+            plt.title("v[km/h]:" + str(bot_v*3.6)[0:4])
             plt.grid(True)
             plt.pause(0.0001)
         
@@ -255,16 +267,9 @@ def main():
             loc.pose.position.y = ty[i]
             global_path_msg.poses.append(loc)
         
-        if (len(path.d) <= 1 or len(path.s_d) <= 1 or len(path.d_d) <= 1) :
-            bot_v = np.sqrt((1 - tc[params.min_id] * c_d)** 2 * (c_speed)** 2 + (c_d_d)** 2)
-        else :
-            if (params.STOP_CAR):
-                bot_v = calc_bot_v(path.d, path.s_d, path.d_d,tc)
-            else :
-                bot_v = np.sqrt(pow(1 - tc[params.min_id] * path.d[1], 2) * pow(path.s_d[1], 2) +
-							 pow(path.d_d[1], 2))
-        if (params.STOP_CAR):
-            print(bot_v)
+        
+        # if (params.STOP_CAR):
+        #     print(bot_v)
         
         vel=Twist()
         vel.linear.x = bot_v
@@ -282,6 +287,8 @@ def main():
         print("Main Loop time elapsed: "+str(end_main_loop -start_main_loop))
 
     print("Finish")
+    end_total_time=time.time()
+    print("Avg main loop time: "+str((start_total_time-end_total_time)/ccc))
     if show_animation:  # pragma: no cover
         plt.grid(True)
         plt.pause(0.0001)
